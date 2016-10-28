@@ -26,6 +26,13 @@ class AProject_ImminentCharacter : public ACharacter
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	class UMotionControllerComponent* L_MotionController;
 
+  class UPhysicsHandleComponent* PhysicsHandle;
+
+  /** Initial values before grab. */
+  FRotator pawnInitRot;
+  FRotator itemInitRot;
+  float itemInitAngDamp;
+
 	/* WalkSpeed is derived from CharaterMovementComponent MaxWalkSpeed*/
 	float WalkSpeed;
 
@@ -59,8 +66,21 @@ public:
 
 
   /** How far away the player can interact with something. */
-  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Interact)
     float InteractRange = 300;
+
+  /** How far away the item will float when the player is holding it. */
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Interact)
+    float ItemDistance = 100;
+  /** How far away the item can be from the target location before the item is automatically dropped. */
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Interact)
+    float MaxHoldDistance = 300;
+  /** How fast the item will move towards the target location. */
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Interact)
+  float InterpolationSpeed = 4;
+  /** Grab will fail if target weighs more than this amount. */
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Interact)
+    float MaxGrabMass = 2500;
 
 	/* Mesh with socket that will be used to attach the lantern*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Mesh)
@@ -118,8 +138,12 @@ protected:
 	/* Handles logic whan player stops running */
 	void StopRun();
 	
-  /** Does a line trace in camera direction and activates it if it is user interactable. */
+  /** Does a line trace in camera direction and activates it if it is user interactable, or grabs it if it is a physics object. */
   void Interact();
+
+  /** Releases the physics handle. */
+  void Release();
+
 protected:
 	// APawn interface
 	virtual void SetupPlayerInputComponent(UInputComponent* InputComponent) override;
