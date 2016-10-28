@@ -25,6 +25,9 @@ class AProject_ImminentCharacter : public ACharacter
 	/** Motion controller (left hand) */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	class UMotionControllerComponent* L_MotionController;
+
+
+
 public:
 	AProject_ImminentCharacter();
 
@@ -41,6 +44,11 @@ public:
 	/** Whether to use motion controller location for aiming. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
 	uint32 bUsingMotionControllers : 1;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Mesh)
+	UStaticMeshComponent* HandleMeshWithSocket;
+
+
 
 protected:
 	/** Resets HMD orientation and position in VR. */
@@ -63,6 +71,13 @@ protected:
 	 * @param Rate	This is a normalized rate, i.e. 1.0 means 100% of desired turn rate
 	 */
 	void LookUpAtRate(float Rate);
+
+
+
+	void Run();
+
+
+
 	
 protected:
 	// APawn interface
