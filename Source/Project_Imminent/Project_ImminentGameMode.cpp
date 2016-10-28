@@ -13,5 +13,5 @@ AProject_ImminentGameMode::AProject_ImminentGameMode()
 	DefaultPawnClass = PlayerPawnClassFinder.Class;
 
 	// use our custom HUD class
-	HUDClass = AProject_ImminentHUD::StaticClass();
+	//HUDClass = AProject_ImminentHUD::StaticClass();
 }
