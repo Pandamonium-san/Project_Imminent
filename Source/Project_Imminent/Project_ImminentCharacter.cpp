@@ -2,13 +2,14 @@
 
 #include "Project_Imminent.h"
 #include "Project_ImminentCharacter.h"
-#include "Project_ImminentProjectile.h"
+//#include "Project_ImminentProjectile.h"
 #include "Animation/AnimInstance.h"
 #include "GameFramework/InputSettings.h"
 #include "Kismet/HeadMountedDisplayFunctionLibrary.h"
 #include "MotionControllerComponent.h"
 #include "TriggerComponent.h"
 #include "DrawDebugHelpers.h"
+
 DEFINE_LOG_CATEGORY_STATIC(LogFPChar, Warning, All);
 
 //////////////////////////////////////////////////////////////////////////
@@ -29,8 +30,8 @@ AProject_ImminentCharacter::AProject_ImminentCharacter()
 	FirstPersonCameraComponent->RelativeLocation = FVector(-39.56f, 1.75f, 64.f); // Position the camera
 	FirstPersonCameraComponent->bUsePawnControlRotation = true;
 
-	// Note: The ProjectileClass and the skeletal mesh/anim blueprints for Mesh1P, FP_Gun, and VR_Gun 
-	// are set in the derived blueprint asset named MyCharacter to avoid direct content references in C++.
+	HandleMeshWithSocket = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MeshWithSocketForLantern"));
+	HandleMeshWithSocket->SetupAttachment(GetCapsuleComponent());
 
 	// Create VR Controllers.
 	R_MotionController = CreateDefaultSubobject<UMotionControllerComponent>(TEXT("R_MotionController"));
@@ -38,6 +39,17 @@ AProject_ImminentCharacter::AProject_ImminentCharacter()
 	R_MotionController->SetupAttachment(RootComponent);
 	L_MotionController = CreateDefaultSubobject<UMotionControllerComponent>(TEXT("L_MotionController"));
 	L_MotionController->SetupAttachment(RootComponent);
+
+
+	RunSpeedFactor = 1.5f;
+	MaxStamina = 50.0f;
+	StaminaConsumptionRate = 10.0f;
+	StaminaRegenerationRate = 10.0f;
+	Stamina = MaxStamina;
+	ExhaustionLimit = 20.f;
+	WalkSpeed = GetCharacterMovement()->MaxWalkSpeed;
+	RunSpeed = WalkSpeed * RunSpeedFactor;
+	bExhausted = false;
 
 
 	// Uncomment the following line to turn motion controllers on by default:
@@ -62,6 +74,8 @@ void AProject_ImminentCharacter::SetupPlayerInputComponent(class UInputComponent
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
 	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
   PlayerInputComponent->BindAction("Interact", IE_Pressed, this, &AProject_ImminentCharacter::Interact);
+	PlayerInputComponent->BindAction("Run", IE_Pressed, this, &AProject_ImminentCharacter::Run);
+	PlayerInputComponent->BindAction("Run", IE_Released, this, &AProject_ImminentCharacter::StopRun);
 	PlayerInputComponent->BindAction("ResetVR", IE_Pressed, this, &AProject_ImminentCharacter::OnResetVR);
 
 	PlayerInputComponent->BindAxis("MoveForward", this, &AProject_ImminentCharacter::MoveForward);
@@ -76,7 +90,32 @@ void AProject_ImminentCharacter::SetupPlayerInputComponent(class UInputComponent
 	PlayerInputComponent->BindAxis("LookUpRate", this, &AProject_ImminentCharacter::LookUpAtRate);
 }
 
+void AProject_ImminentCharacter::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
 
+	//Check if stamina should be consumed. 
+	if (bRunning && !bExhausted)
+		Stamina -= StaminaConsumptionRate * DeltaTime;
+	//Checks if stamina should be regenerated. 
+	if (!bRunning && Stamina < MaxStamina)
+		Stamina += StaminaRegenerationRate * DeltaTime;	
+
+	//Checks if stamina has been exhausted and stops the player from running
+	if (Stamina <= 1.0f)
+	{
+		bExhausted = true;
+		StopRun();
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Exhausted!"));
+	}
+
+	//Checks if stamina has been recovered to the exhaustionlimit and if so removes exhaustion.
+	if (bExhausted)
+	{
+		if (Stamina >= ExhaustionLimit)
+			bExhausted = false;
+	}
+}
 
 void AProject_ImminentCharacter::OnResetVR()
 {
@@ -135,7 +174,7 @@ void AProject_ImminentCharacter::Interact()
     ECC_Visibility, //collision channel
     TraceParams
   );
-  
+
 #ifdef UE_BUILD_DEBUG
   DrawDebugLine(GetWorld(), Start, End, FColor::Red, true, 1, 0, 1);
 #endif
@@ -155,4 +194,20 @@ void AProject_ImminentCharacter::Interact()
     GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, "Hit");
 #endif
   }
+}
+
+void AProject_ImminentCharacter::Run()
+{
+	//Checks if the player can run: Have stamina and is not exhausted, if so sets the walkspeed to runspeed.
+		if (Stamina > 0 && !bExhausted)
+		{
+			GetCharacterMovement()->MaxWalkSpeed = RunSpeed;
+			bRunning = true;
+		}		
+}
+void AProject_ImminentCharacter::StopRun()
+{
+	//Stops the character from runnin and returns the walkspeed to default.
+		bRunning = false;
+		GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
 }
