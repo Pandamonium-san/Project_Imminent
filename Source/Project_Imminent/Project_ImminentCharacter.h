@@ -26,9 +26,16 @@ class AProject_ImminentCharacter : public ACharacter
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	class UMotionControllerComponent* L_MotionController;
 
+	/* WalkSpeed is derived from CharaterMovementComponent MaxWalkSpeed*/
 	float WalkSpeed;
+
+	/* Is based on WalkSpeed and RunSpeedFactor and decides how fast the player runs*/
 	float RunSpeed;
+
+	/* Stamina decides if the player can run or not*/
 	float Stamina;
+
+	/* Is set to true if the player has exhausted all of the stamina and triggers a delay before running is available again */
 	bool bExhausted;
 
 public:
@@ -50,24 +57,31 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
 	uint32 bUsingMotionControllers : 1;
 
+	/* Mesh with socket that will be used to attach the lantern*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Mesh)
 	UStaticMeshComponent* HandleMeshWithSocket;
 
+	/* The factor of which the WalkSpeed will be multiplied inorder to calculate the RunSpeed */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Movement)
 	float RunSpeedFactor;
 
+	/* The limit for the stamina to reach before the player can run again */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Movement)
 	float ExhaustionLimit;
 
+	/* The maximum amount of stamina */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Movement)
 	float MaxStamina;
-
+	
+	/* The rate of which stamina is consumed while running */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Movement)
 	float StaminaConsumptionRate;
 
+	 /* The rate of which stamina is recovered while not running */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Movement)
 	float StaminaRegenerationRate;
 
+	/* Is set to true if the player is running */
 	UPROPERTY(BlueprintReadOnly, Category = Movement)
 	bool bRunning;
 
@@ -95,9 +109,10 @@ protected:
 	 */
 	void LookUpAtRate(float Rate);
 
-
-
+	/* Handles logic when player starts running */
 	void Run();
+
+	/* Handles logic whan player stops running */
 	void StopRun();
 
 

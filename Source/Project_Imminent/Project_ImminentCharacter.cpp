@@ -93,11 +93,14 @@ void AProject_ImminentCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	//Check if stamina should be consumed. 
 	if (bRunning && !bExhausted)
 		Stamina -= StaminaConsumptionRate * DeltaTime;
+	//Checks if stamina should be regenerated. 
 	if (!bRunning && Stamina < MaxStamina)
 		Stamina += StaminaRegenerationRate * DeltaTime;	
 
+	//Checks if stamina has been exhausted and stops the player from running
 	if (Stamina <= 1.0f)
 	{
 		bExhausted = true;
@@ -105,6 +108,7 @@ void AProject_ImminentCharacter::Tick(float DeltaTime)
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Exhausted!"));
 	}
 
+	//Checks if stamina has been recovered to the exhaustionlimit and if so removes exhaustion.
 	if (bExhausted)
 	{
 		if (Stamina >= ExhaustionLimit)
@@ -124,7 +128,6 @@ void AProject_ImminentCharacter::MoveForward(float Value)
 	{
 		// add movement in that direction
 		AddMovementInput(GetActorForwardVector(), Value);
-
 	}
 }
 
@@ -153,6 +156,7 @@ void AProject_ImminentCharacter::LookUpAtRate(float Rate)
 
 void AProject_ImminentCharacter::Run()
 {
+	//Checks if the player can run: Have stamina and is not exhausted, if so sets the walkspeed to runspeed.
 		if (Stamina > 0 && !bExhausted)
 		{
 			GetCharacterMovement()->MaxWalkSpeed = RunSpeed;
@@ -161,6 +165,7 @@ void AProject_ImminentCharacter::Run()
 }
 void AProject_ImminentCharacter::StopRun()
 {
+	//Stops the character from runnin and returns the walkspeed to default.
 		bRunning = false;
 		GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
 
