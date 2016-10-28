@@ -42,6 +42,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
 	uint32 bUsingMotionControllers : 1;
 
+  /** How far away the player can interact with something. */
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
+    float InteractRange = 300;
+
 protected:
 	/** Resets HMD orientation and position in VR. */
 	void OnResetVR();
@@ -64,6 +68,8 @@ protected:
 	 */
 	void LookUpAtRate(float Rate);
 	
+  /** Does a line trace in camera direction and activates it if it is user interactable. */
+  void Interact();
 protected:
 	// APawn interface
 	virtual void SetupPlayerInputComponent(UInputComponent* InputComponent) override;

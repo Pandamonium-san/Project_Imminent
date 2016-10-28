@@ -7,7 +7,8 @@
 #include "GameFramework/InputSettings.h"
 #include "Kismet/HeadMountedDisplayFunctionLibrary.h"
 #include "MotionControllerComponent.h"
-
+#include "TriggerComponent.h"
+#include "DrawDebugHelpers.h"
 DEFINE_LOG_CATEGORY_STATIC(LogFPChar, Warning, All);
 
 //////////////////////////////////////////////////////////////////////////
@@ -60,6 +61,7 @@ void AProject_ImminentCharacter::SetupPlayerInputComponent(class UInputComponent
 
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
 	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
+  PlayerInputComponent->BindAction("Interact", IE_Pressed, this, &AProject_ImminentCharacter::Interact);
 	PlayerInputComponent->BindAction("ResetVR", IE_Pressed, this, &AProject_ImminentCharacter::OnResetVR);
 
 	PlayerInputComponent->BindAxis("MoveForward", this, &AProject_ImminentCharacter::MoveForward);
@@ -110,4 +112,47 @@ void AProject_ImminentCharacter::LookUpAtRate(float Rate)
 {
 	// calculate delta for this frame from the rate information
 	AddControllerPitchInput(Rate * BaseLookUpRate * GetWorld()->GetDeltaSeconds());
+}
+
+void AProject_ImminentCharacter::Interact()
+{
+  FCollisionQueryParams TraceParams = FCollisionQueryParams(FName(TEXT("Interact_Trace")), true, this);
+  TraceParams.bTraceComplex = true;
+  TraceParams.bTraceAsyncScene = true;
+  TraceParams.bReturnPhysicalMaterial = false;
+  TraceParams.AddIgnoredActor(this);
+
+  //Re-initialize hit info
+  FHitResult Hit(ForceInit);
+
+  FVector Start = FirstPersonCameraComponent->GetComponentLocation();
+  FVector End = Start + FirstPersonCameraComponent->GetForwardVector() * InteractRange;
+  //call GetWorld() from within an actor extending class
+  GetWorld()->LineTraceSingleByChannel(
+    Hit,        //result
+    Start,    //start
+    End, //end
+    ECC_Visibility, //collision channel
+    TraceParams
+  );
+  
+#ifdef UE_BUILD_DEBUG
+  DrawDebugLine(GetWorld(), Start, End, FColor::Red, true, 1, 0, 1);
+#endif
+  if (Hit.Actor != NULL)
+  {
+    TArray<UTriggerComponent*> comps;
+    Hit.Actor->GetComponents(comps);
+    for (int i = 0; i < comps.Num(); ++i)
+    {
+      UTriggerComponent* thisComp = Cast<UTriggerComponent>(comps[i]);
+      if (thisComp)
+      {
+        thisComp->TriggerEvent();
+      }
+    }
+#ifdef UE_BUILD_DEBUG
+    GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, "Hit");
+#endif
+  }
 }
