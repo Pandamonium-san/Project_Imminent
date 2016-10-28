@@ -26,12 +26,17 @@ class AProject_ImminentCharacter : public ACharacter
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	class UMotionControllerComponent* L_MotionController;
 
-
+	float WalkSpeed;
+	float RunSpeed;
+	float Stamina;
+	bool bExhausted;
 
 public:
 	AProject_ImminentCharacter();
 
 	virtual void BeginPlay();
+
+	virtual void Tick(float DeltaSeconds) override;
 
 	/** Base turn rate, in deg/sec. Other scaling may affect final turn rate. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Camera)
@@ -47,6 +52,24 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Mesh)
 	UStaticMeshComponent* HandleMeshWithSocket;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Movement)
+	float RunSpeedFactor;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Movement)
+	float ExhaustionLimit;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Movement)
+	float MaxStamina;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Movement)
+	float StaminaConsumptionRate;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Movement)
+	float StaminaRegenerationRate;
+
+	UPROPERTY(BlueprintReadOnly, Category = Movement)
+	bool bRunning;
 
 
 
@@ -75,6 +98,7 @@ protected:
 
 
 	void Run();
+	void StopRun();
 
 
 

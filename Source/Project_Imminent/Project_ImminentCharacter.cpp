@@ -2,11 +2,13 @@
 
 #include "Project_Imminent.h"
 #include "Project_ImminentCharacter.h"
-#include "Project_ImminentProjectile.h"
+//#include "Project_ImminentProjectile.h"
 #include "Animation/AnimInstance.h"
 #include "GameFramework/InputSettings.h"
 #include "Kismet/HeadMountedDisplayFunctionLibrary.h"
 #include "MotionControllerComponent.h"
+#include "Engine.h"
+
 
 DEFINE_LOG_CATEGORY_STATIC(LogFPChar, Warning, All);
 
@@ -39,6 +41,17 @@ AProject_ImminentCharacter::AProject_ImminentCharacter()
 	L_MotionController->SetupAttachment(RootComponent);
 
 
+	RunSpeedFactor = 1.5f;
+	MaxStamina = 50.0f;
+	StaminaConsumptionRate = 10.0f;
+	StaminaRegenerationRate = 10.0f;
+	Stamina = MaxStamina;
+	ExhaustionLimit = 20.f;
+	WalkSpeed = GetCharacterMovement()->MaxWalkSpeed;
+	RunSpeed = WalkSpeed * RunSpeedFactor;
+	bExhausted = false;
+
+
 	// Uncomment the following line to turn motion controllers on by default:
 	//bUsingMotionControllers = true;
 }
@@ -60,6 +73,8 @@ void AProject_ImminentCharacter::SetupPlayerInputComponent(class UInputComponent
 
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
 	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
+	PlayerInputComponent->BindAction("Run", IE_Pressed, this, &AProject_ImminentCharacter::Run);
+	PlayerInputComponent->BindAction("Run", IE_Released, this, &AProject_ImminentCharacter::StopRun);
 	PlayerInputComponent->BindAction("ResetVR", IE_Pressed, this, &AProject_ImminentCharacter::OnResetVR);
 
 	PlayerInputComponent->BindAxis("MoveForward", this, &AProject_ImminentCharacter::MoveForward);
@@ -74,6 +89,29 @@ void AProject_ImminentCharacter::SetupPlayerInputComponent(class UInputComponent
 	PlayerInputComponent->BindAxis("LookUpRate", this, &AProject_ImminentCharacter::LookUpAtRate);
 }
 
+void AProject_ImminentCharacter::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	if (bRunning && !bExhausted)
+		Stamina -= StaminaConsumptionRate * DeltaTime;
+	if (!bRunning && Stamina < MaxStamina)
+		Stamina += StaminaRegenerationRate * DeltaTime;	
+
+	if (Stamina <= 1.0f)
+	{
+		bExhausted = true;
+		StopRun();
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Exhausted!"));
+	}
+
+	if (bExhausted)
+	{
+		if (Stamina >= ExhaustionLimit)
+			bExhausted = false;
+	}
+}
+
 void AProject_ImminentCharacter::OnResetVR()
 {
 	UHeadMountedDisplayFunctionLibrary::ResetOrientationAndPosition();
@@ -86,6 +124,7 @@ void AProject_ImminentCharacter::MoveForward(float Value)
 	{
 		// add movement in that direction
 		AddMovementInput(GetActorForwardVector(), Value);
+
 	}
 }
 
@@ -114,5 +153,15 @@ void AProject_ImminentCharacter::LookUpAtRate(float Rate)
 
 void AProject_ImminentCharacter::Run()
 {
+		if (Stamina > 0 && !bExhausted)
+		{
+			GetCharacterMovement()->MaxWalkSpeed = RunSpeed;
+			bRunning = true;
+		}		
+}
+void AProject_ImminentCharacter::StopRun()
+{
+		bRunning = false;
+		GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
 
 }
