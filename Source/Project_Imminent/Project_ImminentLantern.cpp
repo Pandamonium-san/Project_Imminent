@@ -18,6 +18,9 @@ AProject_ImminentLantern::AProject_ImminentLantern()
 	LanternMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("LanternMesh"));
 	LanternMesh->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
 
+	ArmMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ArmMesh"));
+	ArmMesh->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
+
 	LightSource = CreateDefaultSubobject<UPointLightComponent>(TEXT("LightSource"));
 	LightSource->AttachToComponent(LanternMesh, FAttachmentTransformRules::KeepRelativeTransform);
 
@@ -38,6 +41,12 @@ AProject_ImminentLantern::AProject_ImminentLantern()
 	BackSpotLight = CreateDefaultSubobject<USpotLightComponent>(TEXT("BackSpotLight"));
 	BackSpotLight->AttachToComponent(LightSource, FAttachmentTransformRules::KeepRelativeTransform);
 	SpotLightArray.Add(BackSpotLight);
+
+
+	CollisionComponent = CreateDefaultSubobject<USphereComponent>(TEXT("CollisionComponent"));
+	CollisionComponent->AttachToComponent(LanternMesh, FAttachmentTransformRules::KeepRelativeTransform);
+	
+
 
 	MaxIntensity = 5000.0f;
 	IntensityConsumptionRate = 100.0f;

@@ -26,8 +26,15 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Mesh)
 	UStaticMeshComponent* LanternMesh;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Collision)
+	USphereComponent* CollisionComponent;
+
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Mesh)
 	UStaticMeshComponent* HandleMeshWithSocket;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Mesh)
+	UStaticMeshComponent* ArmMesh;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Light)
 	USpotLightComponent* ForwardSpotLight;
