@@ -26,7 +26,15 @@ class AProject_ImminentCharacter : public ACharacter
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	class UMotionControllerComponent* L_MotionController;
 
+  UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
   class UPhysicsHandleComponent* PhysicsHandle;
+
+  UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+  class UPrimitiveComponent* GrabbedItem;
+
+  UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+  /** Hit result for line trace. Shows what the player is looking at. */
+  FHitResult HitResult;
 
   /** Initial values before grab. */
   FRotator pawnInitRot;
@@ -70,8 +78,16 @@ public:
     float InteractRange = 300;
 
   /** How far away the item will float when the player is holding it. */
+  float ItemDistance = 100;
+  /** Initial distance when player grabs item. */
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Interact)
-    float ItemDistance = 100;
+    float InitItemDistance = 100;
+  /** Min distance player can hold item. */
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Interact)
+    float MinItemDistance = 50;
+  /** Max distance player can hold item. */
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Interact)
+    float MaxItemDistance = 290;
   /** How far away the item can be from the target location before the item is automatically dropped. */
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Interact)
     float MaxHoldDistance = 300;
@@ -111,6 +127,9 @@ public:
 	bool bRunning;
 
 protected:
+  /** Line trace from camera for interact. */
+  void DoLineTrace();
+
 	/** Resets HMD orientation and position in VR. */
 	void OnResetVR();
 
@@ -141,7 +160,11 @@ protected:
   /** Does a line trace in camera direction and activates it if it is user interactable, or grabs it if it is a physics object. */
   void Interact();
 
+  /** Changes the distance of the held item. */
+  void MoveItemAway(float Val);
+
   /** Releases the physics handle. */
+  UFUNCTION(BlueprintCallable, Category="Interact")
   void Release();
 
 protected:
