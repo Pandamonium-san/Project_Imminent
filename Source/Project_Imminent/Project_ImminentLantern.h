@@ -29,12 +29,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Collision)
 	USphereComponent* CollisionComponent;
 
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Mesh)
-	UStaticMeshComponent* HandleMeshWithSocket;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Mesh)
-	UStaticMeshComponent* ArmMesh;
+	UStaticMeshComponent* HandleMesh;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Light)
 	USpotLightComponent* ForwardSpotLight;
@@ -51,10 +47,19 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Light)
 	UPointLightComponent* LightSource;
 	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Physics)
+	class UPhysicsConstraintComponent* PhysicsConstraint;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Physics)
+	bool bAttached;
+
 	USceneComponent* RootComponent;
 
 	UFUNCTION()
 	void ResetIntensity();
+
+	UFUNCTION()
+	void OnOverlapBegin(class UPrimitiveComponent* OverlappingComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
