@@ -9,7 +9,6 @@
 /**
  *  Tutorial: https://wiki.unrealengine.com/Unreal_Engine_AI_Tutorial_-_1_-_Making_AI_Jump_as_a_Part_of_Path_Following
  */
-
 UENUM()
 namespace ENavAreaFlag
 {
@@ -32,11 +31,10 @@ namespace FNavAreaHelper
 
 }
 
-UCLASS(MinimalAPI)
-class UUNavArea_Jump : public UNavArea
+
+UCLASS()
+class PROJECT_IMMINENT_API UUNavArea_Jump : public UNavArea
 {
 	GENERATED_UCLASS_BODY()
 
-public:
-	//UUNavArea_Jump(const FObjectInitializer& ObjectInitializer);
 };

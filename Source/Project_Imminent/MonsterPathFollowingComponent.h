@@ -5,6 +5,9 @@
 #include "Navigation/PathFollowingComponent.h"
 #include "MonsterPathFollowingComponent.generated.h"
 
+
+class UNavMovementComponent;
+class UCharacterMovementComponent;
 /**
  *
  */

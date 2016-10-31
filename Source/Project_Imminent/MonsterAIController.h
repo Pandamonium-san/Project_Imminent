@@ -11,9 +11,6 @@
 UCLASS()
 class PROJECT_IMMINENT_API AMonsterAIController : public AAIController
 {
-	GENERATED_UCLASS_BODY()
-	
-	
-	
+	GENERATED_UCLASS_BODY()	
 	
 };
