@@ -22,7 +22,7 @@ public:
 	virtual void TickComponent( float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction ) override;
 
   // Determines whether the player can activate this trigger by interacting with it.
-  UPROPERTY(EditAnywhere)
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Interact")
     bool UserInteractable;
 
   // Generic trigger event. Activated if player interacts with this actor and interactable is enabled. Can be activated from another script.

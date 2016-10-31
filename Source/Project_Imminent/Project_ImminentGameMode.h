@@ -10,6 +10,7 @@ class AProject_ImminentGameMode : public AGameMode
 
 public:
 	AProject_ImminentGameMode();
+
 };
 
 

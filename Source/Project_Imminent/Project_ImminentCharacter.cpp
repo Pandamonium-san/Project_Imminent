@@ -90,6 +90,8 @@ void AProject_ImminentCharacter::SetupPlayerInputComponent(class UInputComponent
   PlayerInputComponent->BindAxis("TurnRate", this, &AProject_ImminentCharacter::TurnAtRate);
   PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
   PlayerInputComponent->BindAxis("LookUpRate", this, &AProject_ImminentCharacter::LookUpAtRate);
+
+  PlayerInputComponent->BindAxis("MoveItemAway", this, &AProject_ImminentCharacter::MoveItemAway);
 }
 
 void AProject_ImminentCharacter::Tick(float DeltaTime)
@@ -118,24 +120,91 @@ void AProject_ImminentCharacter::Tick(float DeltaTime)
       bExhausted = false;
   }
 
+  DoLineTrace();
+
   // Sets grabbed component location
   if (PhysicsHandle->GrabbedComponent != NULL)
   {
     FVector targetLocation = FirstPersonCameraComponent->GetComponentLocation() + FirstPersonCameraComponent->GetForwardVector() * ItemDistance;
     // Turn item rotation into vector, then rotate vector around Z-axis based on difference between intital pawn Z-rotation and current pawn Z-rotation. Then turn vector to rotation.
     FRotator targetRotation = itemInitRot.Vector().RotateAngleAxis(FirstPersonCameraComponent->GetComponentRotation().Yaw - pawnInitRot.Yaw, FVector(0, 0, 1)).Rotation();
-    PhysicsHandle->SetTargetLocationAndRotation(targetLocation, targetRotation);
+    PhysicsHandle->SetTargetLocation(targetLocation);
+    PhysicsHandle->GrabbedComponent->SetWorldRotation(targetRotation);
     float distanceFromTarget = FVector::Dist(targetLocation, PhysicsHandle->GrabbedComponent->GetComponentLocation());
     if (distanceFromTarget > MaxHoldDistance)
       Release();
+
+    // Line Trace to prevent player from standing on held object
+    FCollisionQueryParams TraceParams = FCollisionQueryParams(FName(TEXT("Interact_Trace")), true, this);
+    TraceParams.bTraceComplex = true;
+    TraceParams.bTraceAsyncScene = true;
+    TraceParams.bReturnPhysicalMaterial = false;
+    TraceParams.AddIgnoredActor(this);
+
+    FHitResult Hit(ForceInit);
+
+    FVector Start = FirstPersonCameraComponent->GetComponentLocation();
+    FVector End = Start + FVector(0, 0, -InteractRange - 100);
+    GetWorld()->LineTraceSingleByChannel(
+      Hit,        
+      Start,    
+      End, 
+      ECC_Visibility, 
+      TraceParams
+    );
+    if (Hit.GetComponent() == PhysicsHandle->GrabbedComponent)
+      Release();
+    DrawDebugLine(GetWorld(), Start, End, FColor::Red, true, 0.1f, 0, 1);
+    Start = GetCapsuleComponent()->GetComponentLocation() + FVector(0, 0, -100.0f) - GetCapsuleComponent()->GetForwardVector() * 60;
+    End = Start + GetCapsuleComponent()->GetForwardVector() * 120;
+    GetWorld()->LineTraceSingleByChannel(
+      Hit,        
+      Start,    
+      End, 
+      ECC_Visibility,
+      TraceParams
+    );
+    if (Hit.GetComponent() == PhysicsHandle->GrabbedComponent)
+      Release();
+    DrawDebugLine(GetWorld(), Start, End, FColor::Red, true, 0.1f, 0, 1);
+
+    Start = GetCapsuleComponent()->GetComponentLocation() + FVector(0, 0, -100.0f) - GetCapsuleComponent()->GetRightVector() * 60;
+    End = Start + GetCapsuleComponent()->GetRightVector() * 120;
+    GetWorld()->LineTraceSingleByChannel(
+      Hit,
+      Start,
+      End,
+      ECC_Visibility,
+      TraceParams
+    );
+    if (Hit.GetComponent() == PhysicsHandle->GrabbedComponent)
+      Release();
+    DrawDebugLine(GetWorld(), Start, End, FColor::Red, true, 0.1f, 0, 1);
   }
 }
 
+void AProject_ImminentCharacter::DoLineTrace()
+{
+  FCollisionQueryParams TraceParams = FCollisionQueryParams(FName(TEXT("Interact_Trace")), true, this);
+  TraceParams.bTraceComplex = true;
+  TraceParams.bTraceAsyncScene = true;
+  TraceParams.bReturnPhysicalMaterial = false;
+  TraceParams.AddIgnoredActor(this);
+
+  FVector Start = FirstPersonCameraComponent->GetComponentLocation();
+  FVector End = Start + FirstPersonCameraComponent->GetForwardVector() * InteractRange;
+  GetWorld()->LineTraceSingleByChannel(
+    this->HitResult,
+    Start,
+    End,
+    ECC_Visibility,
+    TraceParams
+  );
+}
 void AProject_ImminentCharacter::OnResetVR()
 {
   UHeadMountedDisplayFunctionLibrary::ResetOrientationAndPosition();
 }
-
 
 void AProject_ImminentCharacter::MoveForward(float Value)
 {
@@ -169,65 +238,55 @@ void AProject_ImminentCharacter::LookUpAtRate(float Rate)
 
 void AProject_ImminentCharacter::Interact()
 {
-  FCollisionQueryParams TraceParams = FCollisionQueryParams(FName(TEXT("Interact_Trace")), true, this);
-  TraceParams.bTraceComplex = true;
-  TraceParams.bTraceAsyncScene = true;
-  TraceParams.bReturnPhysicalMaterial = false;
-  TraceParams.AddIgnoredActor(this);
-
-  //Re-initialize hit info
-  FHitResult Hit(ForceInit);
-
-  FVector Start = FirstPersonCameraComponent->GetComponentLocation();
-  FVector End = Start + FirstPersonCameraComponent->GetForwardVector() * InteractRange;
-  //call GetWorld() from within an actor extending class
-  GetWorld()->LineTraceSingleByChannel(
-    Hit,        //result
-    Start,    //start
-    End, //end
-    ECC_Visibility, //collision channel
-    TraceParams
-  );
-
-#ifdef UE_BUILD_DEBUG
-  DrawDebugLine(GetWorld(), Start, End, FColor::Red, true, 1, 0, 1);
-#endif
-
-  if (Hit.Actor == NULL)
+  if (HitResult.Actor == NULL)
     return;
-#ifdef UE_BUILD_DEBUG
-  GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, "Hit");
-#endif
 
   // Check if trigger
   TArray<UTriggerComponent*> comps;
-  Hit.Actor->GetComponents(comps);
+  HitResult.Actor->GetComponents(comps);
   for (int i = 0; i < comps.Num(); ++i)
   {
-    comps[i]->TriggerEvent();
+    if(comps[i]->UserInteractable)
+      comps[i]->TriggerEvent();
   }
 
   // Check if physics
-  if (!Hit.Component->IsSimulatingPhysics() || Hit.Component->GetMass() > MaxGrabMass)
+  if (!HitResult.Component->IsSimulatingPhysics() || HitResult.Component->GetMass() > MaxGrabMass)
     return;
 #ifdef UE_BUILD_DEBUG
   GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, "Grab");
 #endif
   PhysicsHandle->InterpolationSpeed = InterpolationSpeed;
-  PhysicsHandle->GrabComponent(Hit.GetComponent(), Hit.BoneName, Hit.Component->GetComponentLocation(), false);
+  PhysicsHandle->GrabComponent(HitResult.GetComponent(), HitResult.BoneName, HitResult.Component->GetComponentLocation(), false);
+  GrabbedItem = HitResult.GetComponent();
   pawnInitRot = FirstPersonCameraComponent->GetComponentRotation();
-  itemInitRot = Hit.Component->GetComponentRotation();
-  itemInitAngDamp = Hit.Component->GetAngularDamping();
-  Hit.Component->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
-  Hit.Component->SetAngularDamping(1500);
+  itemInitRot = HitResult.Component->GetComponentRotation();
+  itemInitAngDamp = HitResult.Component->GetAngularDamping();
+  ItemDistance = InitItemDistance;
+  //HitResult.Component->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
+  HitResult.Component->SetAngularDamping(1500);
+}
+
+void AProject_ImminentCharacter::MoveItemAway(float Val)
+{
+  if (Val != 0.0f)
+  {
+#ifdef UE_BUILD_DEBUG
+    GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, "Changed item distance");
+#endif
+    ItemDistance += 10 * Val;
+    ItemDistance = FMath::Clamp(ItemDistance, MinItemDistance, MaxItemDistance);
+  }
 }
 
 void AProject_ImminentCharacter::Release()
 {
   if (PhysicsHandle->GrabbedComponent != NULL)
   {
-    PhysicsHandle->GrabbedComponent->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
+    //PhysicsHandle->GrabbedComponent->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
     PhysicsHandle->GrabbedComponent->SetAngularDamping(itemInitAngDamp);
+    PhysicsHandle->GrabbedComponent->WakeRigidBody();
+    GrabbedItem = NULL;
     PhysicsHandle->ReleaseComponent();
   }
 }
