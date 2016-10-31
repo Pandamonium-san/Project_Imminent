@@ -123,8 +123,11 @@ void AProject_ImminentCharacter::Tick(float DeltaTime)
   {
     FVector targetLocation = FirstPersonCameraComponent->GetComponentLocation() + FirstPersonCameraComponent->GetForwardVector() * ItemDistance;
     // Turn item rotation into vector, then rotate vector around Z-axis based on difference between intital pawn Z-rotation and current pawn Z-rotation. Then turn vector to rotation.
+    //FRotator targetRotation = itemInitRot.Vector().RotateAngleAxis(FirstPersonCameraComponent->GetComponentRotation().Yaw, FVector(0, 0, 1)).Rotation();
+    //FRotator targetRotation = FRotator(itemInitRot.Roll, itemInitRot.Pitch, itemInitRot.Yaw + FirstPersonCameraComponent->GetComponentRotation().Yaw - pawnInitRot.Yaw);
     FRotator targetRotation = itemInitRot.Vector().RotateAngleAxis(FirstPersonCameraComponent->GetComponentRotation().Yaw - pawnInitRot.Yaw, FVector(0, 0, 1)).Rotation();
-    PhysicsHandle->SetTargetLocationAndRotation(targetLocation, targetRotation);
+    PhysicsHandle->SetTargetLocation(targetLocation);
+    PhysicsHandle->GrabbedComponent->SetWorldRotation(targetRotation);
     float distanceFromTarget = FVector::Dist(targetLocation, PhysicsHandle->GrabbedComponent->GetComponentLocation());
     if (distanceFromTarget > MaxHoldDistance)
       Release();
@@ -228,6 +231,7 @@ void AProject_ImminentCharacter::Release()
   {
     PhysicsHandle->GrabbedComponent->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
     PhysicsHandle->GrabbedComponent->SetAngularDamping(itemInitAngDamp);
+    PhysicsHandle->GrabbedComponent->WakeRigidBody();
     PhysicsHandle->ReleaseComponent();
   }
 }
