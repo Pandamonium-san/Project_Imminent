@@ -3,20 +3,12 @@
 #pragma once
 
 #include "AI/Navigation/NavAreas/NavArea.h"
-#include "Runtime/Engine/Classes/AI/Navigation"
+#include "AI/Navigation/RecastNavMesh.h"
 #include "UNavArea_Jump.generated.h"
 
 /**
  *  Tutorial: https://wiki.unrealengine.com/Unreal_Engine_AI_Tutorial_-_1_-_Making_AI_Jump_as_a_Part_of_Path_Following
  */
-UCLASS()
-class PROJECT_IMMINENT_API UUNavArea_Jump : public UNavArea
-{
-	GENERATED_UCLASS_BODY()
-
-public:
-	UUNavArea_Jump(const class FPostConstructInitializeProperties& PCIP);
-};
 
 UENUM()
 namespace ENavAreaFlag
@@ -39,3 +31,12 @@ namespace FNavAreaHelper
 	FORCEINLINE bool HasJumpFlag(const FNavPathPoint& PathVert) { return IsSet(FNavMeshNodeFlags(PathVert.Flags).AreaFlags, ENavAreaFlag::Jump); }
 
 }
+
+UCLASS(MinimalAPI)
+class UUNavArea_Jump : public UNavArea
+{
+	GENERATED_UCLASS_BODY()
+
+public:
+	//UUNavArea_Jump(const FObjectInitializer& ObjectInitializer);
+};

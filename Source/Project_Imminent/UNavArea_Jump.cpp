@@ -4,7 +4,7 @@
 #include "UNavArea_Jump.h"
 
 
-UUNavArea_Jump::UUNavArea_Jump(const class FPostConstructInitializeProperties& PCIP) : Super(PCIP)
+UUNavArea_Jump::UUNavArea_Jump(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
 	FNavAreaHelper::Set(AreaFlags, ENavAreaFlag::Jump);
 }
