@@ -47,8 +47,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Light)
 	UPointLightComponent* LightSource;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Physics)
-	class UPhysicsConstraintComponent* PhysicsConstraint;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Physics)
 	bool bAttached;

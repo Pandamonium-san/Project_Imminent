@@ -46,21 +46,9 @@ AProject_ImminentLantern::AProject_ImminentLantern()
 	CollisionComponent = CreateDefaultSubobject<USphereComponent>(TEXT("CollisionComponent"));
 	CollisionComponent->OnComponentBeginOverlap.AddDynamic(this, &AProject_ImminentLantern::OnOverlapBegin);
 	CollisionComponent->AttachToComponent(LanternMesh, FAttachmentTransformRules::KeepRelativeTransform);
-
-	//PhysicsConstraint = NewObject<UPhysicsConstraintComponent>(this);
-
-	for (int32 i = 0; i < SpotLightArray.Num(); i++)
-	{
-		SpotLightArray[i]->LightColor.R = 230.0f;
-		SpotLightArray[i]->LightColor.G = 179.0f;
-		SpotLightArray[i]->LightColor.B = 111.0f;
-		SpotLightArray[i]->OuterConeAngle = 80.0f;
-		SpotLightArray[i]->AttenuationRadius = 2000.0f;
-	}
-	
 	
 	MaxIntensity = 5000.0f;
-	IntensityConsumptionRate = 100.0f;
+	IntensityConsumptionRate = 1.0f;
 	Intensity = MaxIntensity;
 	bAttached = false;
 
@@ -69,36 +57,53 @@ AProject_ImminentLantern::AProject_ImminentLantern()
 // Called when the game starts or when spawned
 void AProject_ImminentLantern::BeginPlay()
 {
-	Super::BeginPlay();
-
-	
+	Super::BeginPlay();	
+	for (int32 i = 0; i < SpotLightArray.Num(); i++)
+	{
+		SpotLightArray[i]->LightColor.R = 230.0f;
+		SpotLightArray[i]->LightColor.G = 179.0f;
+		SpotLightArray[i]->LightColor.B = 111.0f;
+		SpotLightArray[i]->OuterConeAngle = 80.0f;
+		SpotLightArray[i]->AttenuationRadius = 2000.0f;
+	}
 }
 
 // Called every frame
 void AProject_ImminentLantern::Tick( float DeltaTime )
 {
-	if (Intensity >= 1)
-		Intensity -= IntensityConsumptionRate;
+	Super::Tick(DeltaTime);
 
-	Super::Tick( DeltaTime );
+	if (LightSource->Intensity >= 1.0f)
+	{
+		Intensity -= IntensityConsumptionRate * DeltaTime;
+		for (int32 i = 0; i < SpotLightArray.Num(); i++)
+			SpotLightArray[i]->SetIntensity(Intensity);
+		LightSource->SetIntensity(Intensity);
+	}
+
 }
 
 void AProject_ImminentLantern::ResetIntensity()
 {
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Intensity reset"));
+	Intensity = MaxIntensity;
+	LightSource->SetIntensity(MaxIntensity);
+
 	for (int32 i = 0; i < SpotLightArray.Num(); i++)
-		SpotLightArray[i]->Intensity = MaxIntensity;
+		SpotLightArray[i]->SetIntensity(MaxIntensity);
+
 }
 
 void AProject_ImminentLantern::OnOverlapBegin(class UPrimitiveComponent* OverlappingComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	if (!bAttached)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("This is an on screen message!"));
-
 		if (Cast<AProject_ImminentCharacter>(OtherActor))
 		{
 			AProject_ImminentCharacter* other = Cast<AProject_ImminentCharacter>(OtherActor);
 			HandleMesh->AttachToComponent(other->HandleMeshWithSocket, FAttachmentTransformRules::KeepRelativeTransform);
+			other->ArmMesh->SetVisibility(true);
+			CollisionComponent->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Overlap);
 			bAttached = true;
 		}
 	}

@@ -60,6 +60,8 @@ public:
 
 	virtual void Tick(float DeltaSeconds) override;
 
+	void RechargeLantern();
+
 	/** Base turn rate, in deg/sec. Other scaling may affect final turn rate. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Camera)
 	float BaseTurnRate;
@@ -102,6 +104,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Mesh)
 	UStaticMeshComponent* HandleMeshWithSocket;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Mesh)
+	UStaticMeshComponent* ArmMesh;
+
 	/* The factor of which the WalkSpeed will be multiplied inorder to calculate the RunSpeed */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Movement)
 	float RunSpeedFactor;
@@ -138,6 +143,8 @@ protected:
 
 	/** Handles stafing movement, left and right */
 	void MoveRight(float Val);
+
+	
 
 	/**
 	 * Called via input to turn at a given rate.

@@ -9,6 +9,8 @@
 #include "MotionControllerComponent.h"
 #include "TriggerComponent.h"
 #include "DrawDebugHelpers.h"
+#include "Project_ImminentLantern.h"
+#include "EngineUtils.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogFPChar, Warning, All);
 
@@ -30,8 +32,12 @@ AProject_ImminentCharacter::AProject_ImminentCharacter()
   FirstPersonCameraComponent->RelativeLocation = FVector(-39.56f, 1.75f, 64.f); // Position the camera
   FirstPersonCameraComponent->bUsePawnControlRotation = true;
 
+  ArmMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ArmMesh"));
+  ArmMesh->SetupAttachment(GetCapsuleComponent());
+
   HandleMeshWithSocket = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MeshWithSocketForLantern"));
-  HandleMeshWithSocket->SetupAttachment(GetCapsuleComponent());
+  HandleMeshWithSocket->AttachToComponent(ArmMesh, FAttachmentTransformRules::KeepRelativeTransform);
+
 
   // Create VR Controllers.
   R_MotionController = CreateDefaultSubobject<UMotionControllerComponent>(TEXT("R_MotionController"));
@@ -78,6 +84,8 @@ void AProject_ImminentCharacter::SetupPlayerInputComponent(class UInputComponent
   PlayerInputComponent->BindAction("Interact", IE_Released, this, &AProject_ImminentCharacter::Release);
   PlayerInputComponent->BindAction("Run", IE_Pressed, this, &AProject_ImminentCharacter::Run);
   PlayerInputComponent->BindAction("Run", IE_Released, this, &AProject_ImminentCharacter::StopRun);
+  PlayerInputComponent->BindAction("ChargeLantern", IE_Pressed, this, &AProject_ImminentCharacter::RechargeLantern);
+
   PlayerInputComponent->BindAction("ResetVR", IE_Pressed, this, &AProject_ImminentCharacter::OnResetVR);
 
   PlayerInputComponent->BindAxis("MoveForward", this, &AProject_ImminentCharacter::MoveForward);
@@ -204,6 +212,16 @@ void AProject_ImminentCharacter::DoLineTrace()
 void AProject_ImminentCharacter::OnResetVR()
 {
   UHeadMountedDisplayFunctionLibrary::ResetOrientationAndPosition();
+}
+
+void AProject_ImminentCharacter::RechargeLantern()
+{
+	for (TObjectIterator<AProject_ImminentLantern> Itr; Itr; ++Itr)
+	{
+		// Access the subclass instance with the * or -> operators.
+		AProject_ImminentLantern *Component = *Itr;
+		Component->ResetIntensity();
+	}
 }
 
 void AProject_ImminentCharacter::MoveForward(float Value)
