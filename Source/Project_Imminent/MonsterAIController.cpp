@@ -6,7 +6,7 @@
 #include "Engine.h"
 
 AMonsterAIController::AMonsterAIController(const FObjectInitializer& ObjectInitializer) 
-	: Super(ObjectInitializer.SetDefaultSubobjectClass<UMonsterPathFollowingComponent>(TEXT("TITTYPathFollowComponent")))
+	: Super(ObjectInitializer.SetDefaultSubobjectClass<UMonsterPathFollowingComponent>(TEXT("PathFollowComponent")))
 {
 
 }
