@@ -13,27 +13,27 @@ UMonsterPathFollowingComponent::UMonsterPathFollowingComponent(const FObjectInit
 void UMonsterPathFollowingComponent::SetMoveSegment(int32 SegmentStartIndex)
 {
 	Super::SetMoveSegment(SegmentStartIndex);
-	if (GEngine)
-		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Setup movement"));
 
 	if (CharacterMoveComp != NULL)
 	{
 		const FNavPathPoint& SegmentStart = Path->GetPathPoints()[MoveSegmentStartIndex];
+
 		if (GEngine)
-			GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("yo yoy oy!"));
-		if (FNavAreaHelper::HasJumpFlag(SegmentStart))
+			GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("SegmentStartIndex: ") + FString::FromInt(SegmentStartIndex));
+
+ 		if (FNavAreaHelper::HasJumpFlag(SegmentStart))
 		{
 			//jump! well... fly-in-straight-line
 			CharacterMoveComp->SetMovementMode(MOVE_Flying);
-			if (GEngine)
-				GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("I WANT TO JUMP!"));
+			//if (GEngine)
+			//	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("I WANT TO JUMP!"));
 		}
 		else
 		{
 			//walk
 			CharacterMoveComp->SetMovementMode(MOVE_Walking);
-			if (GEngine)
-				GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("walking!"));
+			//if (GEngine)
+			//	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("walking!"));
 		}
 	}
 }
