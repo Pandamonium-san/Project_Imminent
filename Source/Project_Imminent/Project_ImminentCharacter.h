@@ -26,6 +26,23 @@ class AProject_ImminentCharacter : public ACharacter
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	class UMotionControllerComponent* L_MotionController;
 
+  UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+  class UPhysicsHandleComponent* PhysicsHandle;
+
+  UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+  class UPrimitiveComponent* GrabbedItem;
+
+  UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+  /** Hit result for line trace. Shows what the player is looking at. */
+  FHitResult HitResult;
+
+  /** Initial values before grab. */
+  UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+    FRotator pawnInitRot;
+  UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+    FRotator itemInitRot;
+  float itemInitAngDamp;
+
 	/* WalkSpeed is derived from CharaterMovementComponent MaxWalkSpeed*/
 	float WalkSpeed;
 
@@ -45,6 +62,8 @@ public:
 
 	virtual void Tick(float DeltaSeconds) override;
 
+	void RechargeLantern();
+
 	/** Base turn rate, in deg/sec. Other scaling may affect final turn rate. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Camera)
 	float BaseTurnRate;
@@ -57,9 +76,38 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
 	uint32 bUsingMotionControllers : 1;
 
+
+  /** How far away the player can interact with something. */
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Interact)
+    float InteractRange = 300;
+
+  /** How far away the item will float when the player is holding it. */
+  float ItemDistance = 100;
+  /** Initial distance when player grabs item. */
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Interact)
+    float InitItemDistance = 100;
+  /** Min distance player can hold item. */
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Interact)
+    float MinItemDistance = 50;
+  /** Max distance player can hold item. */
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Interact)
+    float MaxItemDistance = 290;
+  /** How far away the item can be from the target location before the item is automatically dropped. */
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Interact)
+    float MaxHoldDistance = 300;
+  /** How fast the item will move towards the target location. */
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Interact)
+  float InterpolationSpeed = 4;
+  /** Grab will fail if target weighs more than this amount. */
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Interact)
+    float MaxGrabMass = 2500;
+
 	/* Mesh with socket that will be used to attach the lantern*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Mesh)
 	UStaticMeshComponent* HandleMeshWithSocket;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Mesh)
+	UStaticMeshComponent* ArmMesh;
 
 	/* The factor of which the WalkSpeed will be multiplied inorder to calculate the RunSpeed */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Movement)
@@ -85,9 +133,10 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = Movement)
 	bool bRunning;
 
-
-
 protected:
+  /** Line trace from camera for interact. */
+  void DoLineTrace();
+
 	/** Resets HMD orientation and position in VR. */
 	void OnResetVR();
 
@@ -96,6 +145,8 @@ protected:
 
 	/** Handles stafing movement, left and right */
 	void MoveRight(float Val);
+
+	
 
 	/**
 	 * Called via input to turn at a given rate.
@@ -114,10 +165,17 @@ protected:
 
 	/* Handles logic whan player stops running */
 	void StopRun();
-
-
-
 	
+  /** Does a line trace in camera direction and activates it if it is user interactable, or grabs it if it is a physics object. */
+  void Interact();
+
+  /** Changes the distance of the held item. */
+  void MoveItemAway(float Val);
+
+  /** Releases the physics handle. */
+  UFUNCTION(BlueprintCallable, Category="Interact")
+  void Release();
+
 protected:
 	// APawn interface
 	virtual void SetupPlayerInputComponent(UInputComponent* InputComponent) override;
