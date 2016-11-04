@@ -126,8 +126,7 @@ void AProject_ImminentCharacter::Tick(float DeltaTime)
   if (PhysicsHandle->GrabbedComponent != NULL)
   {
     FVector targetLocation = FirstPersonCameraComponent->GetComponentLocation() + FirstPersonCameraComponent->GetForwardVector() * ItemDistance;
-    // Turn item rotation into vector, then rotate vector around Z-axis based on difference between intital pawn Z-rotation and current pawn Z-rotation. Then turn vector to rotation.
-    FRotator targetRotation = itemInitRot.Vector().RotateAngleAxis(FirstPersonCameraComponent->GetComponentRotation().Yaw - pawnInitRot.Yaw, FVector(0, 0, 1)).Rotation();
+    FRotator targetRotation = itemInitRot + FRotator(0, FirstPersonCameraComponent->GetComponentRotation().Yaw - pawnInitRot.Yaw, 0);
     PhysicsHandle->SetTargetLocation(targetLocation);
     PhysicsHandle->GrabbedComponent->SetWorldRotation(targetRotation);
     float distanceFromTarget = FVector::Dist(targetLocation, PhysicsHandle->GrabbedComponent->GetComponentLocation());
@@ -264,7 +263,7 @@ void AProject_ImminentCharacter::Interact()
   itemInitAngDamp = HitResult.Component->GetAngularDamping();
   ItemDistance = InitItemDistance;
   //HitResult.Component->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
-  HitResult.Component->SetAngularDamping(1500);
+  HitResult.Component->SetAngularDamping(10);
 }
 
 void AProject_ImminentCharacter::MoveItemAway(float Val)

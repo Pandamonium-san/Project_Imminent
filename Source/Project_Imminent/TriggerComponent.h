@@ -24,7 +24,8 @@ public:
   // Determines whether the player can activate this trigger by interacting with it.
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Interact")
     bool UserInteractable;
-
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Trigger")
+    FString HelpText;
   // Generic trigger event. Activated if player interacts with this actor and interactable is enabled. Can be activated from another script.
   UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category="TriggerComponent")
     void TriggerEvent();

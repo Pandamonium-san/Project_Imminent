@@ -37,8 +37,10 @@ class AProject_ImminentCharacter : public ACharacter
   FHitResult HitResult;
 
   /** Initial values before grab. */
-  FRotator pawnInitRot;
-  FRotator itemInitRot;
+  UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+    FRotator pawnInitRot;
+  UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+    FRotator itemInitRot;
   float itemInitAngDamp;
 
 	/* WalkSpeed is derived from CharaterMovementComponent MaxWalkSpeed*/

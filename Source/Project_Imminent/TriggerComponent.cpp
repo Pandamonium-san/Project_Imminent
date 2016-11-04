@@ -34,7 +34,6 @@ void UTriggerComponent::TickComponent( float DeltaTime, ELevelTick TickType, FAc
 	// ...
 }
 
-
 void UTriggerComponent::TriggerEvent_Implementation()
 {
 #ifdef UE_BUILD_DEBUG
