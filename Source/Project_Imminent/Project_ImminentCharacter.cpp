@@ -2,11 +2,17 @@
 
 #include "Project_Imminent.h"
 #include "Project_ImminentCharacter.h"
-#include "Project_ImminentProjectile.h"
+//#include "Project_ImminentProjectile.h"
 #include "Animation/AnimInstance.h"
 #include "GameFramework/InputSettings.h"
 #include "Kismet/HeadMountedDisplayFunctionLibrary.h"
+#include "Runtime/Engine/Classes/PhysicsEngine/PhysicsConstraintComponent.h"
 #include "MotionControllerComponent.h"
+#include "TriggerComponent.h"
+#include "DrawDebugHelpers.h"
+#include "EngineUtils.h"
+#include "Engine.h"
+
 
 DEFINE_LOG_CATEGORY_STATIC(LogFPChar, Warning, All);
 
@@ -15,271 +21,370 @@ DEFINE_LOG_CATEGORY_STATIC(LogFPChar, Warning, All);
 
 AProject_ImminentCharacter::AProject_ImminentCharacter()
 {
-	// Set size for collision capsule
-	GetCapsuleComponent()->InitCapsuleSize(55.f, 96.0f);
+  // Set size for collision capsule
+  GetCapsuleComponent()->InitCapsuleSize(55.f, 96.0f);
 
-	// set our turn rates for input
-	BaseTurnRate = 45.f;
-	BaseLookUpRate = 45.f;
+  // set our turn rates for input
+  BaseTurnRate = 45.f;
+  BaseLookUpRate = 45.f;
 
-	// Create a CameraComponent	
-	FirstPersonCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
-	FirstPersonCameraComponent->SetupAttachment(GetCapsuleComponent());
-	FirstPersonCameraComponent->RelativeLocation = FVector(-39.56f, 1.75f, 64.f); // Position the camera
-	FirstPersonCameraComponent->bUsePawnControlRotation = true;
+  // Create a CameraComponent	
+  FirstPersonCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
+  FirstPersonCameraComponent->SetupAttachment(GetCapsuleComponent());
+  FirstPersonCameraComponent->RelativeLocation = FVector(50.0f, 1.75f, 64.f); // Position the camera
+  FirstPersonCameraComponent->bUsePawnControlRotation = true;
 
-	// Create a mesh component that will be used when being viewed from a '1st person' view (when controlling this pawn)
-	Mesh1P = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("CharacterMesh1P"));
-	Mesh1P->SetOnlyOwnerSee(true);
-	Mesh1P->SetupAttachment(FirstPersonCameraComponent);
-	Mesh1P->bCastDynamicShadow = false;
-	Mesh1P->CastShadow = false;
-	Mesh1P->RelativeRotation = FRotator(1.9f, -19.19f, 5.2f);
-	Mesh1P->RelativeLocation = FVector(-0.5f, -4.4f, -155.7f);
+  ArmMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ArmMesh"));
+  ArmMesh->SetupAttachment(GetCapsuleComponent());
+ // ArmMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 
-	// Create a gun mesh component
-	FP_Gun = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("FP_Gun"));
-	FP_Gun->SetOnlyOwnerSee(true);			// only the owning player will see this mesh
-	FP_Gun->bCastDynamicShadow = false;
-	FP_Gun->CastShadow = false;
-	// FP_Gun->SetupAttachment(Mesh1P, TEXT("GripPoint"));
-	FP_Gun->SetupAttachment(RootComponent);
+  HandleMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("HandleMesh"));
+  HandleMesh->SetupAttachment(GetCapsuleComponent());
+  //HandleMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 
-	FP_MuzzleLocation = CreateDefaultSubobject<USceneComponent>(TEXT("MuzzleLocation"));
-	FP_MuzzleLocation->SetupAttachment(FP_Gun);
-	FP_MuzzleLocation->SetRelativeLocation(FVector(0.2f, 48.4f, -10.6f));
+  LanternMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("LanternMesh"));
+  LanternMesh->SetupAttachment(GetCapsuleComponent());
+ // LanternMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Overlap);
+  LanternMesh->SetSimulatePhysics(true);
 
-	// Default offset from the character location for projectiles to spawn
-	GunOffset = FVector(100.0f, 30.0f, 10.0f);
+  NewLightColor.R = 230.0f;
+  NewLightColor.G = 179.0f;
+  NewLightColor.B = 111.0f;
 
-	// Note: The ProjectileClass and the skeletal mesh/anim blueprints for Mesh1P, FP_Gun, and VR_Gun 
-	// are set in the derived blueprint asset named MyCharacter to avoid direct content references in C++.
+  MaxIntensity = 5000.0f;
+  IntensityConsumptionRate = 100.0f;
+  Intensity = MaxIntensity;
 
-	// Create VR Controllers.
-	R_MotionController = CreateDefaultSubobject<UMotionControllerComponent>(TEXT("R_MotionController"));
-	R_MotionController->Hand = EControllerHand::Right;
-	R_MotionController->SetupAttachment(RootComponent);
-	L_MotionController = CreateDefaultSubobject<UMotionControllerComponent>(TEXT("L_MotionController"));
-	L_MotionController->SetupAttachment(RootComponent);
+  LightSource = CreateDefaultSubobject<UPointLightComponent>(TEXT("LightSource"));
+  LightSource->AttachToComponent(LanternMesh, FAttachmentTransformRules::KeepRelativeTransform);
+  LightSource->SetLightColor(NewLightColor);
 
-	// Create a gun and attach it to the right-hand VR controller.
-	// Create a gun mesh component
-	VR_Gun = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("VR_Gun"));
-	VR_Gun->SetOnlyOwnerSee(true);			// only the owning player will see this mesh
-	VR_Gun->bCastDynamicShadow = false;
-	VR_Gun->CastShadow = false;
-	VR_Gun->SetupAttachment(R_MotionController);
-	VR_Gun->SetRelativeRotation(FRotator(0.0f, -90.0f, 0.0f));
+  ForwardSpotLight = CreateDefaultSubobject<USpotLightComponent>(TEXT("ForwardSpotLight"));
+  ForwardSpotLight->AttachToComponent(LightSource, FAttachmentTransformRules::KeepRelativeTransform);
+  ForwardSpotLight->SetLightColor(NewLightColor);
+  SpotLightArray.Add(ForwardSpotLight);
+/*
+  LeftSpotLight = CreateDefaultSubobject<USpotLightComponent>(TEXT("LeftSpotLight"));
+  LeftSpotLight->SetRelativeRotation(FRotator(0.0f, -90.0f, 0.0f));
+  LeftSpotLight->SetLightColor(NewLightColor);
+  LeftSpotLight->AttachToComponent(LightSource, FAttachmentTransformRules::KeepRelativeTransform);
+  SpotLightArray.Add(LeftSpotLight);*/
 
-	VR_MuzzleLocation = CreateDefaultSubobject<USceneComponent>(TEXT("VR_MuzzleLocation"));
-	VR_MuzzleLocation->SetupAttachment(VR_Gun);
-	VR_MuzzleLocation->SetRelativeLocation(FVector(0.000004, 53.999992, 10.000000));
-	VR_MuzzleLocation->SetRelativeRotation(FRotator(0.0f, 90.0f, 0.0f));		// Counteract the rotation of the VR gun model.
+  RightSpotLight = CreateDefaultSubobject<USpotLightComponent>(TEXT("RightSpotLight"));
+  RightSpotLight->SetRelativeRotation(FRotator(0.0f, 90.0f, 0.0f));
+  RightSpotLight->SetLightColor(NewLightColor);
+  RightSpotLight->AttachToComponent(LightSource, FAttachmentTransformRules::KeepRelativeTransform);
+  SpotLightArray.Add(RightSpotLight);
 
-	// Uncomment the following line to turn motion controllers on by default:
-	//bUsingMotionControllers = true;
+  BackSpotLight = CreateDefaultSubobject<USpotLightComponent>(TEXT("BackSpotLight"));
+  BackSpotLight->SetRelativeRotation(FRotator(0.0f, 180.0f, 0.0f));
+  BackSpotLight->SetLightColor(NewLightColor);
+  BackSpotLight->AttachToComponent(LightSource, FAttachmentTransformRules::KeepRelativeTransform);
+  SpotLightArray.Add(BackSpotLight);
+
+  // Create VR Controllers.
+  R_MotionController = CreateDefaultSubobject<UMotionControllerComponent>(TEXT("R_MotionController"));
+  R_MotionController->Hand = EControllerHand::Right;
+  R_MotionController->SetupAttachment(RootComponent);
+  L_MotionController = CreateDefaultSubobject<UMotionControllerComponent>(TEXT("L_MotionController"));
+  L_MotionController->SetupAttachment(RootComponent);
+
+  PhysicsHandle = CreateDefaultSubobject<UPhysicsHandleComponent>(TEXT("GrabHandle"));
+
+  RunSpeedFactor = 1.5f;
+  MaxStamina = 50.0f;
+  StaminaConsumptionRate = 10.0f;
+  StaminaRegenerationRate = 10.0f;
+  Stamina = MaxStamina;
+  ExhaustionLimit = 20.f;
+  WalkSpeed = GetCharacterMovement()->MaxWalkSpeed;
+  RunSpeed = WalkSpeed * RunSpeedFactor;
+  bExhausted = false;
+
+
+  // Uncomment the following line to turn motion controllers on by default:
+  //bUsingMotionControllers = true;
 }
 
 void AProject_ImminentCharacter::BeginPlay()
 {
-	// Call the base class  
-	Super::BeginPlay();
-
-	//Attach gun mesh component to Skeleton, doing it here because the skeleton is not yet created in the constructor
-	FP_Gun->AttachToComponent(Mesh1P, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true), TEXT("GripPoint"));
-
-	// Show or hide the two versions of the gun based on whether or not we're using motion controllers.
-	if (bUsingMotionControllers)
-	{
-		VR_Gun->SetHiddenInGame(false, true);
-		Mesh1P->SetHiddenInGame(true, true);
-	}
-	else
-	{
-		VR_Gun->SetHiddenInGame(true, true);
-		Mesh1P->SetHiddenInGame(false, true);
-	}
+  // Call the base class  
+  Super::BeginPlay();
 }
+
 
 //////////////////////////////////////////////////////////////////////////
 // Input
 
 void AProject_ImminentCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
 {
-	// set up gameplay key bindings
-	check(PlayerInputComponent);
+  // set up gameplay key bindings
+  check(PlayerInputComponent);
 
-	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
-	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
+  PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
+  PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
+  PlayerInputComponent->BindAction("Interact", IE_Pressed, this, &AProject_ImminentCharacter::Interact);
+  PlayerInputComponent->BindAction("Interact", IE_Released, this, &AProject_ImminentCharacter::Release);
+  PlayerInputComponent->BindAction("Run", IE_Pressed, this, &AProject_ImminentCharacter::Run);
+  PlayerInputComponent->BindAction("Run", IE_Released, this, &AProject_ImminentCharacter::StopRun);
+  PlayerInputComponent->BindAction("ChargeLantern", IE_Pressed, this, &AProject_ImminentCharacter::RechargeLantern);
+  PlayerInputComponent->BindAction("ChargeLantern", IE_Released, this, &AProject_ImminentCharacter::StopRechargeLantern);
 
-	//InputComponent->BindTouch(EInputEvent::IE_Pressed, this, &AProject_ImminentCharacter::TouchStarted);
-	if (EnableTouchscreenMovement(PlayerInputComponent) == false)
-	{
-		PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &AProject_ImminentCharacter::OnFire);
-	}
+  PlayerInputComponent->BindAction("ResetVR", IE_Pressed, this, &AProject_ImminentCharacter::OnResetVR);
 
-	PlayerInputComponent->BindAction("ResetVR", IE_Pressed, this, &AProject_ImminentCharacter::OnResetVR);
+  PlayerInputComponent->BindAxis("MoveForward", this, &AProject_ImminentCharacter::MoveForward);
+  PlayerInputComponent->BindAxis("MoveRight", this, &AProject_ImminentCharacter::MoveRight);
 
-	PlayerInputComponent->BindAxis("MoveForward", this, &AProject_ImminentCharacter::MoveForward);
-	PlayerInputComponent->BindAxis("MoveRight", this, &AProject_ImminentCharacter::MoveRight);
+  // We have 2 versions of the rotation bindings to handle different kinds of devices differently
+  // "turn" handles devices that provide an absolute delta, such as a mouse.
+  // "turnrate" is for devices that we choose to treat as a rate of change, such as an analog joystick
+  PlayerInputComponent->BindAxis("Turn", this, &APawn::AddControllerYawInput);
+  PlayerInputComponent->BindAxis("TurnRate", this, &AProject_ImminentCharacter::TurnAtRate);
+  PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
+  PlayerInputComponent->BindAxis("LookUpRate", this, &AProject_ImminentCharacter::LookUpAtRate);
 
-	// We have 2 versions of the rotation bindings to handle different kinds of devices differently
-	// "turn" handles devices that provide an absolute delta, such as a mouse.
-	// "turnrate" is for devices that we choose to treat as a rate of change, such as an analog joystick
-	PlayerInputComponent->BindAxis("Turn", this, &APawn::AddControllerYawInput);
-	PlayerInputComponent->BindAxis("TurnRate", this, &AProject_ImminentCharacter::TurnAtRate);
-	PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
-	PlayerInputComponent->BindAxis("LookUpRate", this, &AProject_ImminentCharacter::LookUpAtRate);
+  PlayerInputComponent->BindAxis("MoveItemAway", this, &AProject_ImminentCharacter::MoveItemAway);
 }
 
-void AProject_ImminentCharacter::OnFire()
+void AProject_ImminentCharacter::Tick(float DeltaTime)
 {
-	// try and fire a projectile
-	if (ProjectileClass != NULL)
-	{
-		UWorld* const World = GetWorld();
-		if (World != NULL)
-		{
-			if (bUsingMotionControllers)
-			{
-				const FRotator SpawnRotation = VR_MuzzleLocation->GetComponentRotation();
-				const FVector SpawnLocation = VR_MuzzleLocation->GetComponentLocation();
-				World->SpawnActor<AProject_ImminentProjectile>(ProjectileClass, SpawnLocation, SpawnRotation);
-			}
-			else
-			{
-				const FRotator SpawnRotation = GetControlRotation();
-				// MuzzleOffset is in camera space, so transform it to world space before offsetting from the character location to find the final muzzle position
-				const FVector SpawnLocation = ((FP_MuzzleLocation != nullptr) ? FP_MuzzleLocation->GetComponentLocation() : GetActorLocation()) + SpawnRotation.RotateVector(GunOffset);
+  Super::Tick(DeltaTime);
 
-				// spawn the projectile at the muzzle
-				World->SpawnActor<AProject_ImminentProjectile>(ProjectileClass, SpawnLocation, SpawnRotation);
-			}
-		}
-	}
+  if (LightSource->Intensity >= 1.0f)
+  {
+	  Intensity -= IntensityConsumptionRate * DeltaTime;
+	  for (int32 i = 0; i < SpotLightArray.Num(); i++)
+		  SpotLightArray[i]->SetIntensity(Intensity);
 
-	// try and play the sound if specified
-	if (FireSound != NULL)
-	{
-		UGameplayStatics::PlaySoundAtLocation(this, FireSound, GetActorLocation());
-	}
+	  LightSource->SetIntensity(Intensity);
+  }
 
-	// try and play a firing animation if specified
-	if (FireAnimation != NULL)
-	{
-		// Get the animation object for the arms mesh
-		UAnimInstance* AnimInstance = Mesh1P->GetAnimInstance();
-		if (AnimInstance != NULL)
-		{
-			AnimInstance->Montage_Play(FireAnimation, 1.f);
-		}
-	}
+  //Check if stamina should be consumed. 
+  if (bRunning && !bExhausted)
+    Stamina -= StaminaConsumptionRate * DeltaTime;
+  //Checks if stamina should be regenerated. 
+  if (!bRunning && Stamina < MaxStamina)
+    Stamina += StaminaRegenerationRate * DeltaTime;
+
+  //Checks if stamina has been exhausted and stops the player from running
+  if (Stamina <= 1.0f)
+  {
+    bExhausted = true;
+    StopRun();
+    GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Exhausted!"));
+  }
+
+  //Checks if stamina has been recovered to the exhaustion limit and if so removes exhaustion.
+  if (bExhausted)
+  {
+    if (Stamina >= ExhaustionLimit)
+      bExhausted = false;
+  }
+
+  DoLineTrace();
+
+  // Sets grabbed component location
+  if (PhysicsHandle->GrabbedComponent != NULL)
+  {
+    FVector targetLocation = FirstPersonCameraComponent->GetComponentLocation() + FirstPersonCameraComponent->GetForwardVector() * ItemDistance;
+    FRotator targetRotation = itemInitRot + FRotator(0, FirstPersonCameraComponent->GetComponentRotation().Yaw - pawnInitRot.Yaw, 0);
+    PhysicsHandle->SetTargetLocation(targetLocation);
+    PhysicsHandle->GrabbedComponent->SetWorldRotation(targetRotation);
+    float distanceFromTarget = FVector::Dist(targetLocation, PhysicsHandle->GrabbedComponent->GetComponentLocation());
+    if (distanceFromTarget > MaxHoldDistance)
+      Release();
+
+    // Line Trace to prevent player from standing on held object
+    FCollisionQueryParams TraceParams = FCollisionQueryParams(FName(TEXT("Interact_Trace")), true, this);
+    TraceParams.bTraceComplex = true;
+    TraceParams.bTraceAsyncScene = true;
+    TraceParams.bReturnPhysicalMaterial = false;
+    TraceParams.AddIgnoredActor(this);
+
+    FHitResult Hit(ForceInit);
+
+    FVector Start = FirstPersonCameraComponent->GetComponentLocation();
+    FVector End = Start + FVector(0, 0, -InteractRange - 100);
+    GetWorld()->LineTraceSingleByChannel(
+      Hit,        
+      Start,    
+      End, 
+      ECC_Visibility, 
+      TraceParams
+    );
+    if (Hit.GetComponent() == PhysicsHandle->GrabbedComponent)
+      Release();
+    DrawDebugLine(GetWorld(), Start, End, FColor::Red, true, 0.1f, 0, 1);
+    Start = GetCapsuleComponent()->GetComponentLocation() + FVector(0, 0, -100.0f) - GetCapsuleComponent()->GetForwardVector() * 60;
+    End = Start + GetCapsuleComponent()->GetForwardVector() * 120;
+    GetWorld()->LineTraceSingleByChannel(
+      Hit,        
+      Start,    
+      End, 
+      ECC_Visibility,
+      TraceParams
+    );
+    if (Hit.GetComponent() == PhysicsHandle->GrabbedComponent)
+      Release();
+    DrawDebugLine(GetWorld(), Start, End, FColor::Red, true, 0.1f, 0, 1);
+
+    Start = GetCapsuleComponent()->GetComponentLocation() + FVector(0, 0, -100.0f) - GetCapsuleComponent()->GetRightVector() * 60;
+    End = Start + GetCapsuleComponent()->GetRightVector() * 120;
+    GetWorld()->LineTraceSingleByChannel(
+      Hit,
+      Start,
+      End,
+      ECC_Visibility,
+      TraceParams
+    );
+    if (Hit.GetComponent() == PhysicsHandle->GrabbedComponent)
+      Release();
+    DrawDebugLine(GetWorld(), Start, End, FColor::Red, true, 0.1f, 0, 1);
+  }
 }
 
+void AProject_ImminentCharacter::DoLineTrace()
+{
+  FCollisionQueryParams TraceParams = FCollisionQueryParams(FName(TEXT("Interact_Trace")), true, this);
+  TraceParams.bTraceComplex = true;
+  TraceParams.bTraceAsyncScene = true;
+  TraceParams.bReturnPhysicalMaterial = false;
+  TraceParams.AddIgnoredActor(this);
+
+  FVector Start = FirstPersonCameraComponent->GetComponentLocation();
+  FVector End = Start + FirstPersonCameraComponent->GetForwardVector() * InteractRange;
+  GetWorld()->LineTraceSingleByChannel(
+    this->HitResult,
+    Start,
+    End,
+    ECC_Visibility,
+    TraceParams
+  );
+}
 void AProject_ImminentCharacter::OnResetVR()
 {
-	UHeadMountedDisplayFunctionLibrary::ResetOrientationAndPosition();
+  UHeadMountedDisplayFunctionLibrary::ResetOrientationAndPosition();
 }
 
-void AProject_ImminentCharacter::BeginTouch(const ETouchIndex::Type FingerIndex, const FVector Location)
+void AProject_ImminentCharacter::StopRechargeLantern()
 {
-	if (TouchItem.bIsPressed == true)
-	{
-		return;
-	}
-	TouchItem.bIsPressed = true;
-	TouchItem.FingerIndex = FingerIndex;
-	TouchItem.Location = Location;
-	TouchItem.bMoved = false;
+
 }
 
-void AProject_ImminentCharacter::EndTouch(const ETouchIndex::Type FingerIndex, const FVector Location)
+void AProject_ImminentCharacter::RechargeLantern()
 {
-	if (TouchItem.bIsPressed == false)
-	{
-		return;
-	}
-	if ((FingerIndex == TouchItem.FingerIndex) && (TouchItem.bMoved == false))
-	{
-		OnFire();
-	}
-	TouchItem.bIsPressed = false;
-}
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Intensity reset"));
+	Intensity = MaxIntensity;
+	LightSource->SetIntensity(MaxIntensity);
 
-void AProject_ImminentCharacter::TouchUpdate(const ETouchIndex::Type FingerIndex, const FVector Location)
-{
-	if ((TouchItem.bIsPressed == true) && (TouchItem.FingerIndex == FingerIndex))
-	{
-		if (TouchItem.bIsPressed)
-		{
-			if (GetWorld() != nullptr)
-			{
-				UGameViewportClient* ViewportClient = GetWorld()->GetGameViewport();
-				if (ViewportClient != nullptr)
-				{
-					FVector MoveDelta = Location - TouchItem.Location;
-					FVector2D ScreenSize;
-					ViewportClient->GetViewportSize(ScreenSize);
-					FVector2D ScaledDelta = FVector2D(MoveDelta.X, MoveDelta.Y) / ScreenSize;
-					if (FMath::Abs(ScaledDelta.X) >= 4.0 / ScreenSize.X)
-					{
-						TouchItem.bMoved = true;
-						float Value = ScaledDelta.X * BaseTurnRate;
-						AddControllerYawInput(Value);
-					}
-					if (FMath::Abs(ScaledDelta.Y) >= 4.0 / ScreenSize.Y)
-					{
-						TouchItem.bMoved = true;
-						float Value = ScaledDelta.Y * BaseTurnRate;
-						AddControllerPitchInput(Value);
-					}
-					TouchItem.Location = Location;
-				}
-				TouchItem.Location = Location;
-			}
-		}
-	}
+	//for (int32 i = 0; i < SpotLightArray.Num()-1; i++)
+	//	SpotLightArray[i]->SetIntensity(MaxIntensity);
+	//for (TObjectIterator<AProject_ImminentLantern> Itr; Itr; ++Itr)
+	//{
+	//	// Access the subclass instance with the * or -> operators.
+	//	AProject_ImminentLantern *Component = *Itr;
+	//	Component->ResetIntensity();
+	//	break;
+	//}
 }
 
 void AProject_ImminentCharacter::MoveForward(float Value)
 {
-	if (Value != 0.0f)
-	{
-		// add movement in that direction
-		AddMovementInput(GetActorForwardVector(), Value);
-	}
+  if (Value != 0.0f)
+  {
+    // add movement in that direction
+    AddMovementInput(GetActorForwardVector(), Value);
+  }
 }
 
 void AProject_ImminentCharacter::MoveRight(float Value)
 {
-	if (Value != 0.0f)
-	{
-		// add movement in that direction
-		AddMovementInput(GetActorRightVector(), Value);
-	}
+  if (Value != 0.0f)
+  {
+    // add movement in that direction
+    AddMovementInput(GetActorRightVector(), Value);
+  }
 }
 
 void AProject_ImminentCharacter::TurnAtRate(float Rate)
 {
-	// calculate delta for this frame from the rate information
-	AddControllerYawInput(Rate * BaseTurnRate * GetWorld()->GetDeltaSeconds());
+  // calculate delta for this frame from the rate information
+  AddControllerYawInput(Rate * BaseTurnRate * GetWorld()->GetDeltaSeconds());
 }
 
 void AProject_ImminentCharacter::LookUpAtRate(float Rate)
 {
-	// calculate delta for this frame from the rate information
-	AddControllerPitchInput(Rate * BaseLookUpRate * GetWorld()->GetDeltaSeconds());
+  // calculate delta for this frame from the rate information
+  AddControllerPitchInput(Rate * BaseLookUpRate * GetWorld()->GetDeltaSeconds());
 }
 
-bool AProject_ImminentCharacter::EnableTouchscreenMovement(class UInputComponent* PlayerInputComponent)
+void AProject_ImminentCharacter::Interact()
 {
-	bool bResult = false;
-	if (FPlatformMisc::GetUseVirtualJoysticks() || GetDefault<UInputSettings>()->bUseMouseForTouch)
-	{
-		bResult = true;
-		PlayerInputComponent->BindTouch(EInputEvent::IE_Pressed, this, &AProject_ImminentCharacter::BeginTouch);
-		PlayerInputComponent->BindTouch(EInputEvent::IE_Released, this, &AProject_ImminentCharacter::EndTouch);
-		PlayerInputComponent->BindTouch(EInputEvent::IE_Repeat, this, &AProject_ImminentCharacter::TouchUpdate);
-	}
-	return bResult;
+  if (HitResult.Actor == NULL)
+    return;
+
+  // Check if trigger
+  TArray<UTriggerComponent*> comps;
+  HitResult.Actor->GetComponents(comps);
+  for (int i = 0; i < comps.Num(); ++i)
+  {
+    if(comps[i]->UserInteractable)
+      comps[i]->TriggerEvent();
+  }
+
+  // Check if physics
+  if (!HitResult.Component->IsSimulatingPhysics() || HitResult.Component->GetMass() > MaxGrabMass)
+    return;
+#ifdef UE_BUILD_DEBUG
+  GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, "Grab");
+#endif
+  PhysicsHandle->InterpolationSpeed = InterpolationSpeed;
+  PhysicsHandle->GrabComponent(HitResult.GetComponent(), HitResult.BoneName, HitResult.Component->GetComponentLocation(), false);
+  GrabbedItem = HitResult.GetComponent();
+  pawnInitRot = FirstPersonCameraComponent->GetComponentRotation();
+  itemInitRot = HitResult.Component->GetComponentRotation();
+  itemInitAngDamp = HitResult.Component->GetAngularDamping();
+  ItemDistance = InitItemDistance;
+  //HitResult.Component->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
+  HitResult.Component->SetAngularDamping(10);
+}
+
+void AProject_ImminentCharacter::MoveItemAway(float Val)
+{
+  if (Val != 0.0f)
+  {
+#ifdef UE_BUILD_DEBUG
+    GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, "Changed item distance");
+#endif
+    ItemDistance += 10 * Val;
+    ItemDistance = FMath::Clamp(ItemDistance, MinItemDistance, MaxItemDistance);
+  }
+}
+
+void AProject_ImminentCharacter::Release()
+{
+  if (PhysicsHandle->GrabbedComponent != NULL)
+  {
+    //PhysicsHandle->GrabbedComponent->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
+    PhysicsHandle->GrabbedComponent->SetAngularDamping(itemInitAngDamp);
+    PhysicsHandle->GrabbedComponent->WakeRigidBody();
+    GrabbedItem = NULL;
+    PhysicsHandle->ReleaseComponent();
+  }
+}
+
+void AProject_ImminentCharacter::Run()
+{
+  //Checks if the player can run: Have stamina and is not exhausted, if so sets the walkspeed to runspeed.
+  if (Stamina > 0 && !bExhausted)
+  {
+    GetCharacterMovement()->MaxWalkSpeed = RunSpeed;
+    bRunning = true;
+  }
+}
+void AProject_ImminentCharacter::StopRun()
+{
+  //Stops the character from runnin and returns the walkspeed to default.
+  bRunning = false;
+  GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
 }

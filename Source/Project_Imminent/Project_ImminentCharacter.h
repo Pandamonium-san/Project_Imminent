@@ -10,25 +10,9 @@ class AProject_ImminentCharacter : public ACharacter
 {
 	GENERATED_BODY()
 
-	/** Pawn mesh: 1st person view (arms; seen only by self) */
-	UPROPERTY(VisibleDefaultsOnly, Category=Mesh)
-	class USkeletalMeshComponent* Mesh1P;
-
-	/** Gun mesh: 1st person view (seen only by self) */
-	UPROPERTY(VisibleDefaultsOnly, Category = Mesh)
-	class USkeletalMeshComponent* FP_Gun;
-
-	/** Location on gun mesh where projectiles should spawn. */
-	UPROPERTY(VisibleDefaultsOnly, Category = Mesh)
-	class USceneComponent* FP_MuzzleLocation;
-
-	/** Gun mesh: VR view (attached to the VR controller directly, no arm, just the actual gun) */
-	UPROPERTY(VisibleDefaultsOnly, Category = Mesh)
-	class USkeletalMeshComponent* VR_Gun;
-
-	/** Location on VR gun mesh where projectiles should spawn. */
-	UPROPERTY(VisibleDefaultsOnly, Category = Mesh)
-	class USceneComponent* VR_MuzzleLocation;
+	///** Pawn mesh: 1st person view (arms; seen only by self) */
+	//UPROPERTY(VisibleDefaultsOnly, Category=Mesh)
+	//class USkeletalMeshComponent* Mesh1P;
 
 	/** First person camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
@@ -41,10 +25,76 @@ class AProject_ImminentCharacter : public ACharacter
 	/** Motion controller (left hand) */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	class UMotionControllerComponent* L_MotionController;
+
+  UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+  class UPhysicsHandleComponent* PhysicsHandle;
+
+  UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+  class UPrimitiveComponent* GrabbedItem;
+
+  UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+  /** Hit result for line trace. Shows what the player is looking at. */
+  FHitResult HitResult;
+
+  /** Initial values before grab. */
+  UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+    FRotator pawnInitRot;
+  UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+    FRotator itemInitRot;
+  float itemInitAngDamp;
+
+	/* WalkSpeed is derived from CharaterMovementComponent MaxWalkSpeed*/
+	float WalkSpeed;
+
+	/* Is based on WalkSpeed and RunSpeedFactor and decides how fast the player runs*/
+	float RunSpeed;
+
+	/* Stamina decides if the player can run or not*/
+	float Stamina;
+
+	/* Is set to true if the player has exhausted all of the stamina and triggers a delay before running is available again */
+	bool bExhausted;
+
+	float Intensity;
+	TArray<USpotLightComponent*> SpotLightArray;
+
 public:
 	AProject_ImminentCharacter();
 
 	virtual void BeginPlay();
+
+	virtual void Tick(float DeltaSeconds) override;
+
+	void RechargeLantern();
+	void StopRechargeLantern();
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Light)
+	float MaxIntensity;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Light)
+	float IntensityConsumptionRate;
+
+	FLinearColor NewLightColor;
+
+
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Light)
+		USpotLightComponent* ForwardSpotLight;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Light)
+		USpotLightComponent* RightSpotLight;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Light)
+		USpotLightComponent* LeftSpotLight;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Light)
+		USpotLightComponent* BackSpotLight;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Light)
+		UPointLightComponent* LightSource;
+
+
+
 
 	/** Base turn rate, in deg/sec. Other scaling may affect final turn rate. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Camera)
@@ -54,30 +104,76 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Camera)
 	float BaseLookUpRate;
 
-	/** Gun muzzle's offset from the characters location */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Gameplay)
-	FVector GunOffset;
-
-	/** Projectile class to spawn */
-	UPROPERTY(EditDefaultsOnly, Category=Projectile)
-	TSubclassOf<class AProject_ImminentProjectile> ProjectileClass;
-
-	/** Sound to play each time we fire */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Gameplay)
-	class USoundBase* FireSound;
-
-	/** AnimMontage to play each time we fire */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
-	class UAnimMontage* FireAnimation;
-
 	/** Whether to use motion controller location for aiming. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
 	uint32 bUsingMotionControllers : 1;
 
-protected:
+
+  /** How far away the player can interact with something. */
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Interact)
+    float InteractRange = 300;
+
+  /** How far away the item will float when the player is holding it. */
+  float ItemDistance = 100;
+  /** Initial distance when player grabs item. */
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Interact)
+    float InitItemDistance = 100;
+  /** Min distance player can hold item. */
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Interact)
+    float MinItemDistance = 50;
+  /** Max distance player can hold item. */
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Interact)
+    float MaxItemDistance = 290;
+  /** How far away the item can be from the target location before the item is automatically dropped. */
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Interact)
+    float MaxHoldDistance = 300;
+  /** How fast the item will move towards the target location. */
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Interact)
+  float InterpolationSpeed = 4;
+  /** Grab will fail if target weighs more than this amount. */
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Interact)
+    float MaxGrabMass = 2500;
+
+	/* Mesh with socket that will be used to attach the lantern*/
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Mesh, meta = (AllowPrivateAccess = "true"))
+	UStaticMeshComponent* HandleMesh;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Mesh, meta = (AllowPrivateAccess = "true"))
+	UStaticMeshComponent* ArmMesh;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Physics, meta = (AllowPrivateAccess = "true"))
+	UPhysicsConstraintComponent* PhysConstraint;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Mesh, meta = (AllowPrivateAccess = "true"))
+	UStaticMeshComponent* LanternMesh;
+
+	/* The factor of which the WalkSpeed will be multiplied inorder to calculate the RunSpeed */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Movement)
+	float RunSpeedFactor;
+
+	/* The limit for the stamina to reach before the player can run again */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Movement)
+	float ExhaustionLimit;
+
+	/* The maximum amount of stamina */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Movement)
+	float MaxStamina;
 	
-	/** Fires a projectile. */
-	void OnFire();
+	/* The rate of which stamina is consumed while running */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Movement)
+	float StaminaConsumptionRate;
+
+	 /* The rate of which stamina is recovered while not running */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Movement)
+	float StaminaRegenerationRate;
+
+	/* Is set to true if the player is running */
+	UPROPERTY(BlueprintReadOnly, Category = Movement)
+	bool bRunning;
+
+protected:
+  /** Line trace from camera for interact. */
+  void DoLineTrace();
 
 	/** Resets HMD orientation and position in VR. */
 	void OnResetVR();
@@ -87,6 +183,8 @@ protected:
 
 	/** Handles stafing movement, left and right */
 	void MoveRight(float Val);
+
+	
 
 	/**
 	 * Called via input to turn at a given rate.
@@ -100,36 +198,30 @@ protected:
 	 */
 	void LookUpAtRate(float Rate);
 
-	struct TouchData
-	{
-		TouchData() { bIsPressed = false;Location=FVector::ZeroVector;}
-		bool bIsPressed;
-		ETouchIndex::Type FingerIndex;
-		FVector Location;
-		bool bMoved;
-	};
-	void BeginTouch(const ETouchIndex::Type FingerIndex, const FVector Location);
-	void EndTouch(const ETouchIndex::Type FingerIndex, const FVector Location);
-	void TouchUpdate(const ETouchIndex::Type FingerIndex, const FVector Location);
-	TouchData	TouchItem;
+	/* Handles logic when player starts running */
+	void Run();
+
+	/* Handles logic whan player stops running */
+	void StopRun();
 	
+  /** Does a line trace in camera direction and activates it if it is user interactable, or grabs it if it is a physics object. */
+  void Interact();
+
+  /** Changes the distance of the held item. */
+  void MoveItemAway(float Val);
+
+  /** Releases the physics handle. */
+  UFUNCTION(BlueprintCallable, Category="Interact")
+  void Release();
+
 protected:
 	// APawn interface
 	virtual void SetupPlayerInputComponent(UInputComponent* InputComponent) override;
 	// End of APawn interface
 
-	/* 
-	 * Configures input for touchscreen devices if there is a valid touch interface for doing so 
-	 *
-	 * @param	InputComponent	The input component pointer to bind controls to
-	 * @returns true if touch controls were enabled.
-	 */
-	bool EnableTouchscreenMovement(UInputComponent* InputComponent);
 
 public:
-	/** Returns Mesh1P subobject **/
-	FORCEINLINE class USkeletalMeshComponent* GetMesh1P() const { return Mesh1P; }
-	/** Returns FirstPersonCameraComponent subobject **/
+
 	FORCEINLINE class UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
 
 };
