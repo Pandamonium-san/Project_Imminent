@@ -29,15 +29,19 @@ AProject_ImminentCharacter::AProject_ImminentCharacter()
   // Create a CameraComponent	
   FirstPersonCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
   FirstPersonCameraComponent->SetupAttachment(GetCapsuleComponent());
-  FirstPersonCameraComponent->RelativeLocation = FVector(-39.56f, 1.75f, 64.f); // Position the camera
+  FirstPersonCameraComponent->RelativeLocation = FVector(50.0f, 1.75f, 64.f); // Position the camera
   FirstPersonCameraComponent->bUsePawnControlRotation = true;
 
   ArmMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ArmMesh"));
   ArmMesh->SetupAttachment(GetCapsuleComponent());
+  ArmMesh->SetRelativeLocation(FVector(92.0f, -56.0f, 48.0f));
+  ArmMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+
 
   HandleMeshWithSocket = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MeshWithSocketForLantern"));
   HandleMeshWithSocket->AttachToComponent(ArmMesh, FAttachmentTransformRules::KeepRelativeTransform);
-
+  HandleMeshWithSocket->SetRelativeLocation(FVector(5.3f, -10.2f, -16.7f));
+  HandleMeshWithSocket->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 
   // Create VR Controllers.
   R_MotionController = CreateDefaultSubobject<UMotionControllerComponent>(TEXT("R_MotionController"));
