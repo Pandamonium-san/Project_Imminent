@@ -96,17 +96,17 @@ void AProject_ImminentLantern::ResetIntensity()
 
 void AProject_ImminentLantern::OnOverlapBegin(class UPrimitiveComponent* OverlappingComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if (!bAttached)
-	{
-		if (Cast<AProject_ImminentCharacter>(OtherActor))
-		{
-			AProject_ImminentCharacter* other = Cast<AProject_ImminentCharacter>(OtherActor);
-			HandleMesh->AttachToComponent(other->HandleMeshWithSocket, FAttachmentTransformRules::KeepRelativeTransform);
-			other->ArmMesh->SetVisibility(true);
-			CollisionComponent->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Overlap);
-			bAttached = true;
-		}
-	}
+	//if (!bAttached)
+	//{
+	//	if (Cast<AProject_ImminentCharacter>(OtherActor))
+	//	{
+	//		AProject_ImminentCharacter* other = Cast<AProject_ImminentCharacter>(OtherActor);
+	//		HandleMesh->AttachToComponent(other->HandleMeshWithSocket, FAttachmentTransformRules::KeepRelativeTransform);
+	//		other->ArmMesh->SetVisibility(true);
+	//		CollisionComponent->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Overlap);
+	//		bAttached = true;
+	//	}
+	//}
 	
 }
 
