@@ -55,6 +55,9 @@ class AProject_ImminentCharacter : public ACharacter
 	/* Is set to true if the player has exhausted all of the stamina and triggers a delay before running is available again */
 	bool bExhausted;
 
+	float Intensity;
+	TArray<USpotLightComponent*> SpotLightArray;
+
 public:
 	AProject_ImminentCharacter();
 
@@ -63,6 +66,35 @@ public:
 	virtual void Tick(float DeltaSeconds) override;
 
 	void RechargeLantern();
+	void StopRechargeLantern();
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Light)
+	float MaxIntensity;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Light)
+	float IntensityConsumptionRate;
+
+	FLinearColor NewLightColor;
+
+
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Light)
+		USpotLightComponent* ForwardSpotLight;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Light)
+		USpotLightComponent* RightSpotLight;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Light)
+		USpotLightComponent* LeftSpotLight;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Light)
+		USpotLightComponent* BackSpotLight;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Light)
+		UPointLightComponent* LightSource;
+
+
+
 
 	/** Base turn rate, in deg/sec. Other scaling may affect final turn rate. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Camera)
@@ -103,11 +135,17 @@ public:
     float MaxGrabMass = 2500;
 
 	/* Mesh with socket that will be used to attach the lantern*/
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Mesh)
-	UStaticMeshComponent* HandleMeshWithSocket;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Mesh, meta = (AllowPrivateAccess = "true"))
+	UStaticMeshComponent* HandleMesh;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Mesh)
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Mesh, meta = (AllowPrivateAccess = "true"))
 	UStaticMeshComponent* ArmMesh;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Physics, meta = (AllowPrivateAccess = "true"))
+	UPhysicsConstraintComponent* PhysConstraint;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Mesh, meta = (AllowPrivateAccess = "true"))
+	UStaticMeshComponent* LanternMesh;
 
 	/* The factor of which the WalkSpeed will be multiplied inorder to calculate the RunSpeed */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Movement)

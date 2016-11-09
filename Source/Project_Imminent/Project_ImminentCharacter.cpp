@@ -6,11 +6,13 @@
 #include "Animation/AnimInstance.h"
 #include "GameFramework/InputSettings.h"
 #include "Kismet/HeadMountedDisplayFunctionLibrary.h"
+#include "Runtime/Engine/Classes/PhysicsEngine/PhysicsConstraintComponent.h"
 #include "MotionControllerComponent.h"
 #include "TriggerComponent.h"
 #include "DrawDebugHelpers.h"
-#include "Project_ImminentLantern.h"
 #include "EngineUtils.h"
+#include "Engine.h"
+
 
 DEFINE_LOG_CATEGORY_STATIC(LogFPChar, Warning, All);
 
@@ -29,15 +31,56 @@ AProject_ImminentCharacter::AProject_ImminentCharacter()
   // Create a CameraComponent	
   FirstPersonCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
   FirstPersonCameraComponent->SetupAttachment(GetCapsuleComponent());
-  FirstPersonCameraComponent->RelativeLocation = FVector(-39.56f, 1.75f, 64.f); // Position the camera
+  FirstPersonCameraComponent->RelativeLocation = FVector(50.0f, 1.75f, 64.f); // Position the camera
   FirstPersonCameraComponent->bUsePawnControlRotation = true;
 
   ArmMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ArmMesh"));
   ArmMesh->SetupAttachment(GetCapsuleComponent());
+ // ArmMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 
-  HandleMeshWithSocket = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MeshWithSocketForLantern"));
-  HandleMeshWithSocket->AttachToComponent(ArmMesh, FAttachmentTransformRules::KeepRelativeTransform);
+  HandleMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("HandleMesh"));
+  HandleMesh->SetupAttachment(GetCapsuleComponent());
+  //HandleMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 
+  LanternMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("LanternMesh"));
+  LanternMesh->SetupAttachment(GetCapsuleComponent());
+ // LanternMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Overlap);
+  LanternMesh->SetSimulatePhysics(true);
+
+  NewLightColor.R = 230.0f;
+  NewLightColor.G = 179.0f;
+  NewLightColor.B = 111.0f;
+
+  MaxIntensity = 5000.0f;
+  IntensityConsumptionRate = 100.0f;
+  Intensity = MaxIntensity;
+
+  LightSource = CreateDefaultSubobject<UPointLightComponent>(TEXT("LightSource"));
+  LightSource->AttachToComponent(LanternMesh, FAttachmentTransformRules::KeepRelativeTransform);
+  LightSource->SetLightColor(NewLightColor);
+
+  ForwardSpotLight = CreateDefaultSubobject<USpotLightComponent>(TEXT("ForwardSpotLight"));
+  ForwardSpotLight->AttachToComponent(LightSource, FAttachmentTransformRules::KeepRelativeTransform);
+  ForwardSpotLight->SetLightColor(NewLightColor);
+  SpotLightArray.Add(ForwardSpotLight);
+/*
+  LeftSpotLight = CreateDefaultSubobject<USpotLightComponent>(TEXT("LeftSpotLight"));
+  LeftSpotLight->SetRelativeRotation(FRotator(0.0f, -90.0f, 0.0f));
+  LeftSpotLight->SetLightColor(NewLightColor);
+  LeftSpotLight->AttachToComponent(LightSource, FAttachmentTransformRules::KeepRelativeTransform);
+  SpotLightArray.Add(LeftSpotLight);*/
+
+  RightSpotLight = CreateDefaultSubobject<USpotLightComponent>(TEXT("RightSpotLight"));
+  RightSpotLight->SetRelativeRotation(FRotator(0.0f, 90.0f, 0.0f));
+  RightSpotLight->SetLightColor(NewLightColor);
+  RightSpotLight->AttachToComponent(LightSource, FAttachmentTransformRules::KeepRelativeTransform);
+  SpotLightArray.Add(RightSpotLight);
+
+  BackSpotLight = CreateDefaultSubobject<USpotLightComponent>(TEXT("BackSpotLight"));
+  BackSpotLight->SetRelativeRotation(FRotator(0.0f, 180.0f, 0.0f));
+  BackSpotLight->SetLightColor(NewLightColor);
+  BackSpotLight->AttachToComponent(LightSource, FAttachmentTransformRules::KeepRelativeTransform);
+  SpotLightArray.Add(BackSpotLight);
 
   // Create VR Controllers.
   R_MotionController = CreateDefaultSubobject<UMotionControllerComponent>(TEXT("R_MotionController"));
@@ -85,6 +128,7 @@ void AProject_ImminentCharacter::SetupPlayerInputComponent(class UInputComponent
   PlayerInputComponent->BindAction("Run", IE_Pressed, this, &AProject_ImminentCharacter::Run);
   PlayerInputComponent->BindAction("Run", IE_Released, this, &AProject_ImminentCharacter::StopRun);
   PlayerInputComponent->BindAction("ChargeLantern", IE_Pressed, this, &AProject_ImminentCharacter::RechargeLantern);
+  PlayerInputComponent->BindAction("ChargeLantern", IE_Released, this, &AProject_ImminentCharacter::StopRechargeLantern);
 
   PlayerInputComponent->BindAction("ResetVR", IE_Pressed, this, &AProject_ImminentCharacter::OnResetVR);
 
@@ -105,6 +149,15 @@ void AProject_ImminentCharacter::SetupPlayerInputComponent(class UInputComponent
 void AProject_ImminentCharacter::Tick(float DeltaTime)
 {
   Super::Tick(DeltaTime);
+
+  if (LightSource->Intensity >= 1.0f)
+  {
+	  Intensity -= IntensityConsumptionRate * DeltaTime;
+	  for (int32 i = 0; i < SpotLightArray.Num(); i++)
+		  SpotLightArray[i]->SetIntensity(Intensity);
+
+	  LightSource->SetIntensity(Intensity);
+  }
 
   //Check if stamina should be consumed. 
   if (bRunning && !bExhausted)
@@ -221,14 +274,26 @@ void AProject_ImminentCharacter::OnResetVR()
   UHeadMountedDisplayFunctionLibrary::ResetOrientationAndPosition();
 }
 
+void AProject_ImminentCharacter::StopRechargeLantern()
+{
+
+}
+
 void AProject_ImminentCharacter::RechargeLantern()
 {
-  for (TObjectIterator<AProject_ImminentLantern> Itr; Itr; ++Itr)
-  {
-    // Access the subclass instance with the * or -> operators.
-    AProject_ImminentLantern *Component = *Itr;
-    Component->ResetIntensity();
-  }
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Intensity reset"));
+	Intensity = MaxIntensity;
+	LightSource->SetIntensity(MaxIntensity);
+
+	//for (int32 i = 0; i < SpotLightArray.Num()-1; i++)
+	//	SpotLightArray[i]->SetIntensity(MaxIntensity);
+	//for (TObjectIterator<AProject_ImminentLantern> Itr; Itr; ++Itr)
+	//{
+	//	// Access the subclass instance with the * or -> operators.
+	//	AProject_ImminentLantern *Component = *Itr;
+	//	Component->ResetIntensity();
+	//	break;
+	//}
 }
 
 void AProject_ImminentCharacter::MoveForward(float Value)
