@@ -6,11 +6,6 @@ public class Project_Imminent : ModuleRules
 {
 	public Project_Imminent(TargetInfo Target)
 	{
-<<<<<<< HEAD
 		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "HeadMountedDisplay", "AIModule" });
 	}
-=======
-        PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "HeadMountedDisplay", "AIModule" });
-    }
->>>>>>> develop
 }
