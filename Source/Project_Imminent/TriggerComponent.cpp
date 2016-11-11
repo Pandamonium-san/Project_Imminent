@@ -37,6 +37,6 @@ void UTriggerComponent::TickComponent( float DeltaTime, ELevelTick TickType, FAc
 void UTriggerComponent::TriggerEvent_Implementation()
 {
 #ifdef UE_BUILD_DEBUG
-  GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Red, "Trigger activated.");
+  GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Red, DebugText);
 #endif
 }
