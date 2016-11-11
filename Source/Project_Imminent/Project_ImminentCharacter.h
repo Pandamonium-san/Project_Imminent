@@ -42,7 +42,7 @@ class AProject_ImminentCharacter : public ACharacter
   UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
     FRotator itemInitRot;
   float itemInitAngDamp;
-
+  
 	/* WalkSpeed is derived from CharaterMovementComponent MaxWalkSpeed*/
 	float WalkSpeed;
 
@@ -184,7 +184,6 @@ protected:
 	/** Handles stafing movement, left and right */
 	void MoveRight(float Val);
 
-	
 
 	/**
 	 * Called via input to turn at a given rate.

@@ -203,51 +203,55 @@ void AProject_ImminentCharacter::Tick(float DeltaTime)
       Release();
 
     // Line Trace to prevent player from standing on held object
-    FCollisionQueryParams TraceParams = FCollisionQueryParams(FName(TEXT("Interact_Trace")), true, this);
-    TraceParams.bTraceComplex = true;
-    TraceParams.bTraceAsyncScene = true;
-    TraceParams.bReturnPhysicalMaterial = false;
-    TraceParams.AddIgnoredActor(this);
+    if (PhysicsHandle->GrabbedBoneName == NAME_None)
+    {
 
-    FHitResult Hit(ForceInit);
+      FCollisionQueryParams TraceParams = FCollisionQueryParams(FName(TEXT("Interact_Trace")), true, this);
+      TraceParams.bTraceComplex = true;
+      TraceParams.bTraceAsyncScene = true;
+      TraceParams.bReturnPhysicalMaterial = false;
+      TraceParams.AddIgnoredActor(this);
 
-    FVector Start = FirstPersonCameraComponent->GetComponentLocation();
-    FVector End = Start + FVector(0, 0, -InteractRange - 100);
-    GetWorld()->LineTraceSingleByChannel(
-      Hit,
-      Start,
-      End,
-      ECC_Visibility,
-      TraceParams
-    );
-    if (Hit.GetComponent() == PhysicsHandle->GrabbedComponent)
-      Release();
-    DrawDebugLine(GetWorld(), Start, End, FColor::Red, true, 0.1f, 0, 1);
-    Start = GetCapsuleComponent()->GetComponentLocation() + FVector(0, 0, -100.0f) - GetCapsuleComponent()->GetForwardVector() * 60;
-    End = Start + GetCapsuleComponent()->GetForwardVector() * 120;
-    GetWorld()->LineTraceSingleByChannel(
-      Hit,
-      Start,
-      End,
-      ECC_Visibility,
-      TraceParams
-    );
-    if (Hit.GetComponent() == PhysicsHandle->GrabbedComponent)
-      Release();
-    DrawDebugLine(GetWorld(), Start, End, FColor::Red, true, 0.1f, 0, 1);
+      FHitResult Hit(ForceInit);
 
-    Start = GetCapsuleComponent()->GetComponentLocation() + FVector(0, 0, -100.0f) - GetCapsuleComponent()->GetRightVector() * 60;
-    End = Start + GetCapsuleComponent()->GetRightVector() * 120;
-    GetWorld()->LineTraceSingleByChannel(
-      Hit,
-      Start,
-      End,
-      ECC_Visibility,
-      TraceParams
-    );
-    if (Hit.GetComponent() == PhysicsHandle->GrabbedComponent)
-      Release();
-    DrawDebugLine(GetWorld(), Start, End, FColor::Red, true, 0.1f, 0, 1);
+      FVector Start = FirstPersonCameraComponent->GetComponentLocation();
+      FVector End = Start + FVector(0, 0, -InteractRange - 100);
+      GetWorld()->LineTraceSingleByChannel(
+        Hit,
+        Start,
+        End,
+        ECC_Visibility,
+        TraceParams
+      );
+      if (Hit.GetComponent() == PhysicsHandle->GrabbedComponent)
+        Release();
+      DrawDebugLine(GetWorld(), Start, End, FColor::Red, true, 0.1f, 0, 1);
+      Start = GetCapsuleComponent()->GetComponentLocation() + FVector(0, 0, -100.0f) - GetCapsuleComponent()->GetForwardVector() * 60;
+      End = Start + GetCapsuleComponent()->GetForwardVector() * 120;
+      GetWorld()->LineTraceSingleByChannel(
+        Hit,
+        Start,
+        End,
+        ECC_Visibility,
+        TraceParams
+      );
+      if (Hit.GetComponent() == PhysicsHandle->GrabbedComponent)
+        Release();
+      DrawDebugLine(GetWorld(), Start, End, FColor::Red, true, 0.1f, 0, 1);
+
+      Start = GetCapsuleComponent()->GetComponentLocation() + FVector(0, 0, -100.0f) - GetCapsuleComponent()->GetRightVector() * 60;
+      End = Start + GetCapsuleComponent()->GetRightVector() * 120;
+      GetWorld()->LineTraceSingleByChannel(
+        Hit,
+        Start,
+        End,
+        ECC_Visibility,
+        TraceParams
+      );
+      if (Hit.GetComponent() == PhysicsHandle->GrabbedComponent)
+        Release();
+      DrawDebugLine(GetWorld(), Start, End, FColor::Red, true, 0.1f, 0, 1);
+    }
   }
 }
 
