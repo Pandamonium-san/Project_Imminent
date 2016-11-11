@@ -36,7 +36,7 @@ AProject_ImminentCharacter::AProject_ImminentCharacter()
 
   ArmMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ArmMesh"));
   ArmMesh->SetupAttachment(GetCapsuleComponent());
- // ArmMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+  // ArmMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 
   HandleMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("HandleMesh"));
   HandleMesh->SetupAttachment(GetCapsuleComponent());
@@ -44,7 +44,7 @@ AProject_ImminentCharacter::AProject_ImminentCharacter()
 
   LanternMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("LanternMesh"));
   LanternMesh->SetupAttachment(GetCapsuleComponent());
- // LanternMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Overlap);
+  // LanternMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Overlap);
   LanternMesh->SetSimulatePhysics(true);
 
   NewLightColor.R = 230.0f;
@@ -63,12 +63,12 @@ AProject_ImminentCharacter::AProject_ImminentCharacter()
   ForwardSpotLight->AttachToComponent(LightSource, FAttachmentTransformRules::KeepRelativeTransform);
   ForwardSpotLight->SetLightColor(NewLightColor);
   SpotLightArray.Add(ForwardSpotLight);
-/*
-  LeftSpotLight = CreateDefaultSubobject<USpotLightComponent>(TEXT("LeftSpotLight"));
-  LeftSpotLight->SetRelativeRotation(FRotator(0.0f, -90.0f, 0.0f));
-  LeftSpotLight->SetLightColor(NewLightColor);
-  LeftSpotLight->AttachToComponent(LightSource, FAttachmentTransformRules::KeepRelativeTransform);
-  SpotLightArray.Add(LeftSpotLight);*/
+  /*
+    LeftSpotLight = CreateDefaultSubobject<USpotLightComponent>(TEXT("LeftSpotLight"));
+    LeftSpotLight->SetRelativeRotation(FRotator(0.0f, -90.0f, 0.0f));
+    LeftSpotLight->SetLightColor(NewLightColor);
+    LeftSpotLight->AttachToComponent(LightSource, FAttachmentTransformRules::KeepRelativeTransform);
+    SpotLightArray.Add(LeftSpotLight);*/
 
   RightSpotLight = CreateDefaultSubobject<USpotLightComponent>(TEXT("RightSpotLight"));
   RightSpotLight->SetRelativeRotation(FRotator(0.0f, 90.0f, 0.0f));
@@ -97,8 +97,8 @@ AProject_ImminentCharacter::AProject_ImminentCharacter()
   StaminaRegenerationRate = 10.0f;
   Stamina = MaxStamina;
   ExhaustionLimit = 20.f;
-  WalkSpeed = GetCharacterMovement()->MaxWalkSpeed;
-  RunSpeed = WalkSpeed * RunSpeedFactor;
+  //WalkSpeed = GetCharacterMovement()->MaxWalkSpeed;
+  //RunSpeed = WalkSpeed * RunSpeedFactor;
   bExhausted = false;
 
 
@@ -110,6 +110,8 @@ void AProject_ImminentCharacter::BeginPlay()
 {
   // Call the base class  
   Super::BeginPlay();
+  WalkSpeed = GetCharacterMovement()->MaxWalkSpeed;
+  RunSpeed = WalkSpeed * RunSpeedFactor;
 }
 
 
@@ -152,11 +154,11 @@ void AProject_ImminentCharacter::Tick(float DeltaTime)
 
   if (LightSource->Intensity >= 1.0f)
   {
-	  Intensity -= IntensityConsumptionRate * DeltaTime;
-	  for (int32 i = 0; i < SpotLightArray.Num(); i++)
-		  SpotLightArray[i]->SetIntensity(Intensity);
+    Intensity -= IntensityConsumptionRate * DeltaTime;
+    for (int32 i = 0; i < SpotLightArray.Num(); i++)
+      SpotLightArray[i]->SetIntensity(Intensity);
 
-	  LightSource->SetIntensity(Intensity);
+    LightSource->SetIntensity(Intensity);
   }
 
   //Check if stamina should be consumed. 
@@ -285,19 +287,19 @@ void AProject_ImminentCharacter::StopRechargeLantern()
 
 void AProject_ImminentCharacter::RechargeLantern()
 {
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Intensity reset"));
-	Intensity = MaxIntensity;
-	LightSource->SetIntensity(MaxIntensity);
+  GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Intensity reset"));
+  Intensity = MaxIntensity;
+  LightSource->SetIntensity(MaxIntensity);
 
-	//for (int32 i = 0; i < SpotLightArray.Num()-1; i++)
-	//	SpotLightArray[i]->SetIntensity(MaxIntensity);
-	//for (TObjectIterator<AProject_ImminentLantern> Itr; Itr; ++Itr)
-	//{
-	//	// Access the subclass instance with the * or -> operators.
-	//	AProject_ImminentLantern *Component = *Itr;
-	//	Component->ResetIntensity();
-	//	break;
-	//}
+  //for (int32 i = 0; i < SpotLightArray.Num()-1; i++)
+  //	SpotLightArray[i]->SetIntensity(MaxIntensity);
+  //for (TObjectIterator<AProject_ImminentLantern> Itr; Itr; ++Itr)
+  //{
+  //	// Access the subclass instance with the * or -> operators.
+  //	AProject_ImminentLantern *Component = *Itr;
+  //	Component->ResetIntensity();
+  //	break;
+  //}
 }
 
 void AProject_ImminentCharacter::MoveForward(float Value)
@@ -305,7 +307,10 @@ void AProject_ImminentCharacter::MoveForward(float Value)
   if (Value != 0.0f)
   {
     // add movement in that direction
-    AddMovementInput(GetActorForwardVector(), Value);
+    if (GetCharacterMovement()->MovementMode == EMovementMode::MOVE_Walking)
+      AddMovementInput(GetActorForwardVector(), Value);
+    else if (GetCharacterMovement()->MovementMode == (EMovementMode::MOVE_Flying | EMovementMode::MOVE_Swimming))
+      AddMovementInput(FirstPersonCameraComponent->GetForwardVector(), Value);
   }
 }
 
@@ -314,7 +319,10 @@ void AProject_ImminentCharacter::MoveRight(float Value)
   if (Value != 0.0f)
   {
     // add movement in that direction
-    AddMovementInput(GetActorRightVector(), Value);
+    if(GetCharacterMovement()->MovementMode == EMovementMode::MOVE_Walking)
+        AddMovementInput(GetActorRightVector(), Value);
+    else if (GetCharacterMovement()->MovementMode == (EMovementMode::MOVE_Flying | EMovementMode::MOVE_Swimming))
+      AddMovementInput(FirstPersonCameraComponent->GetRightVector(), Value);
   }
 }
 
@@ -345,14 +353,20 @@ void AProject_ImminentCharacter::Interact()
   }
 
   // Check if physics
-  if (!(HitResult.Component->IsSimulatingPhysics(HitResult.BoneName) || HitResult.Component->IsSimulatingPhysics()) ||
-    HitResult.Component->GetMass() > MaxGrabMass)
+  if (!HitResult.Component->IsSimulatingPhysics(HitResult.BoneName) && !HitResult.Component->IsSimulatingPhysics())
     return;
+  if (HitResult.Component->GetMass() > MaxGrabMass)
+  {
+#ifdef UE_BUILD_DEBUG
+    GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, "Too heavy");
+#endif
+    return;
+  }
 #ifdef UE_BUILD_DEBUG
   GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, "Grab");
 #endif
   PhysicsHandle->InterpolationSpeed = InterpolationSpeed;
-  if(HitResult.BoneName == NAME_None)
+  if (HitResult.BoneName == NAME_None)
     PhysicsHandle->GrabComponent(HitResult.GetComponent(), HitResult.BoneName, HitResult.GetComponent()->GetComponentLocation(), false);
   else
     PhysicsHandle->GrabComponent(HitResult.GetComponent(), HitResult.BoneName, HitResult.Location + (HitResult.TraceEnd - HitResult.Location) / 2, false);
@@ -369,9 +383,6 @@ void AProject_ImminentCharacter::MoveItemAway(float Val)
 {
   if (Val != 0.0f)
   {
-#ifdef UE_BUILD_DEBUG
-    GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, "Changed item distance");
-#endif
     ItemDistance += 10 * Val;
     ItemDistance = FMath::Clamp(ItemDistance, MinItemDistance, MaxItemDistance);
   }
