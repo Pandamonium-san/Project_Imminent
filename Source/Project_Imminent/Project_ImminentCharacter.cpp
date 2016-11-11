@@ -186,11 +186,19 @@ void AProject_ImminentCharacter::Tick(float DeltaTime)
   // Sets grabbed component location
   if (PhysicsHandle->GrabbedComponent != NULL)
   {
+    float distanceFromTarget;
     FVector targetLocation = FirstPersonCameraComponent->GetComponentLocation() + FirstPersonCameraComponent->GetForwardVector() * ItemDistance;
-    FRotator targetRotation = itemInitRot + FRotator(0, FirstPersonCameraComponent->GetComponentRotation().Yaw - pawnInitRot.Yaw, 0);
     PhysicsHandle->SetTargetLocation(targetLocation);
-    PhysicsHandle->GrabbedComponent->SetWorldRotation(targetRotation);
-    float distanceFromTarget = FVector::Dist(targetLocation, PhysicsHandle->GrabbedComponent->GetComponentLocation());
+    if (PhysicsHandle->GrabbedBoneName == NAME_None)
+    {
+      FRotator targetRotation = itemInitRot + FRotator(0, FirstPersonCameraComponent->GetComponentRotation().Yaw - pawnInitRot.Yaw, 0);
+      PhysicsHandle->GrabbedComponent->SetWorldRotation(targetRotation);
+      distanceFromTarget = FVector::Dist(targetLocation, PhysicsHandle->GrabbedComponent->GetComponentLocation());
+    }
+    else
+    {
+      distanceFromTarget = FVector::Dist(targetLocation, PhysicsHandle->GrabbedComponent->GetBodyInstance(PhysicsHandle->GrabbedBoneName)->GetCOMPosition());
+    }
     if (distanceFromTarget > MaxHoldDistance)
       Release();
 
@@ -206,10 +214,10 @@ void AProject_ImminentCharacter::Tick(float DeltaTime)
     FVector Start = FirstPersonCameraComponent->GetComponentLocation();
     FVector End = Start + FVector(0, 0, -InteractRange - 100);
     GetWorld()->LineTraceSingleByChannel(
-      Hit,        
-      Start,    
-      End, 
-      ECC_Visibility, 
+      Hit,
+      Start,
+      End,
+      ECC_Visibility,
       TraceParams
     );
     if (Hit.GetComponent() == PhysicsHandle->GrabbedComponent)
@@ -218,9 +226,9 @@ void AProject_ImminentCharacter::Tick(float DeltaTime)
     Start = GetCapsuleComponent()->GetComponentLocation() + FVector(0, 0, -100.0f) - GetCapsuleComponent()->GetForwardVector() * 60;
     End = Start + GetCapsuleComponent()->GetForwardVector() * 120;
     GetWorld()->LineTraceSingleByChannel(
-      Hit,        
-      Start,    
-      End, 
+      Hit,
+      Start,
+      End,
       ECC_Visibility,
       TraceParams
     );
@@ -328,18 +336,22 @@ void AProject_ImminentCharacter::Interact()
   HitResult.Actor->GetComponents(comps);
   for (int i = 0; i < comps.Num(); ++i)
   {
-    if(comps[i]->UserInteractable)
+    if (comps[i]->UserInteractable)
       comps[i]->TriggerEvent();
   }
 
   // Check if physics
-  if (!HitResult.Component->IsSimulatingPhysics() || HitResult.Component->GetMass() > MaxGrabMass)
+  if (!(HitResult.Component->IsSimulatingPhysics(HitResult.BoneName) || HitResult.Component->IsSimulatingPhysics()) ||
+    HitResult.Component->GetMass() > MaxGrabMass)
     return;
 #ifdef UE_BUILD_DEBUG
   GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, "Grab");
 #endif
   PhysicsHandle->InterpolationSpeed = InterpolationSpeed;
-  PhysicsHandle->GrabComponent(HitResult.GetComponent(), HitResult.BoneName, HitResult.Component->GetComponentLocation(), false);
+  if(HitResult.BoneName == NAME_None)
+    PhysicsHandle->GrabComponent(HitResult.GetComponent(), HitResult.BoneName, HitResult.GetComponent()->GetComponentLocation(), false);
+  else
+    PhysicsHandle->GrabComponent(HitResult.GetComponent(), HitResult.BoneName, HitResult.Location + (HitResult.TraceEnd - HitResult.Location) / 2, false);
   GrabbedItem = HitResult.GetComponent();
   pawnInitRot = FirstPersonCameraComponent->GetComponentRotation();
   itemInitRot = HitResult.Component->GetComponentRotation();
@@ -370,6 +382,9 @@ void AProject_ImminentCharacter::Release()
     PhysicsHandle->GrabbedComponent->WakeRigidBody();
     GrabbedItem = NULL;
     PhysicsHandle->ReleaseComponent();
+#ifdef UE_BUILD_DEBUG
+    GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, "Release");
+#endif
   }
 }
 

@@ -17,11 +17,12 @@ class PROJECT_IMMINENT_API UMonsterPathFollowingComponent : public UPathFollowin
 	GENERATED_UCLASS_BODY()
 
 protected:
+
+public:
 	//Cached UCharacterMovementComponent
 	UPROPERTY(transient)
 	UCharacterMovementComponent* CharacterMoveComp;
 
-public:
 	// used to detect properties of a path's segment a character is about to follow
 	virtual void SetMoveSegment(int32 SegmentStartIndex) override;
 
