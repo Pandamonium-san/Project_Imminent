@@ -29,7 +29,7 @@ public:
 	UFUNCTION()
 	void OnOverlapBeginLight(class UPrimitiveComponent* OverlappingComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = CollisionBox)
 	USphereComponent *lightKillSphere;
 
 	float WalkSpeed;
