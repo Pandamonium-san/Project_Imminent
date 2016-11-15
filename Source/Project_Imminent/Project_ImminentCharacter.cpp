@@ -257,6 +257,14 @@ void AProject_ImminentCharacter::Tick(float DeltaTime)
   }
 }
 
+void AProject_ImminentCharacter::HandleDeath()
+{
+	UWorld* World = GetWorld();
+	FString CurrentLevel = World->GetMapName();
+	FName levelName = FName(*CurrentLevel);
+	UGameplayStatics::OpenLevel(GetWorld(), levelName);
+}
+
 void AProject_ImminentCharacter::DoLineTrace()
 {
   FCollisionQueryParams TraceParams = FCollisionQueryParams(FName(TEXT("Interact_Trace")), true, this);
