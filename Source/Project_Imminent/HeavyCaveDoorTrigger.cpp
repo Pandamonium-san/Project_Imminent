@@ -15,7 +15,7 @@ void UHeavyCaveDoorTrigger::TriggerEvent_Implementation()
 	for (TActorIterator<AHeavyCaveDoor> ActorItr(GetWorld()); ActorItr; ++ActorItr)
 	{
 		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
-		AHeavyCaveDoor *Mesh = *ActorItr;
+		//AHeavyCaveDoor *Mesh = *ActorItr;
 		ActorItr->OpenDoor();
 	}	
 
