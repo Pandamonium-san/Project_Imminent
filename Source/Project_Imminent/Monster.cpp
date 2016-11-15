@@ -13,6 +13,8 @@ AMonster::AMonster()
 	lightKillSphere = CreateDefaultSubobject<USphereComponent>(TEXT("LightsOutSphere"));
 	lightKillSphere->InitSphereRadius(400);
 	lightKillSphere->SetupAttachment(RootComponent);
+	lightKillSphere->bGenerateOverlapEvents = true;
+	lightKillSphere->OnComponentBeginOverlap.AddDynamic(this, &AMonster::OnOverlapBeginLight);
 
 	WalkSpeed = GetCharacterMovement()->MaxWalkSpeed;
 	FlySpeed = GetCharacterMovement()->MaxFlySpeed;
@@ -38,3 +40,11 @@ void AMonster::SetupPlayerInputComponent(class UInputComponent* InputComponent)
 	Super::SetupPlayerInputComponent(InputComponent);
 }
 
+void AMonster::OnOverlapBeginLight(class UPrimitiveComponent* OverlappingComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	if (Cast<AInteractLight>(OtherActor))
+	{
+		AInteractLight *interactLight = Cast<AInteractLight>(OtherActor);
+		interactLight->light->SetIntensity(0);
+	}
+}

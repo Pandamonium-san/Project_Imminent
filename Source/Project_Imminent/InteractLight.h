@@ -9,12 +9,6 @@ UCLASS()
 class PROJECT_IMMINENT_API AInteractLight : public AActor
 {
 	GENERATED_BODY()
-
-	UPROPERTY(EditAnywhere)
-	UPointLightComponent* light;
-
-	UPROPERTY(EditAnywhere)
-	USphereComponent* hitbox;
 	
 public:	
 	// Sets default values for this actor's properties
@@ -25,7 +19,11 @@ public:
 	
 	// Called every frame
 	virtual void Tick( float DeltaSeconds ) override;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Light)
+		UPointLightComponent* light;
 
-	
-	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = CollisionBox)
+		USphereComponent* hitbox;
+
 };
