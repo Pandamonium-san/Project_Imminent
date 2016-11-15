@@ -171,6 +171,9 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = Movement)
 	bool bRunning;
 
+	UFUNCTION(BlueprintCallable, Category = "Death")
+	void HandleDeath();
+
 protected:
   /** Line trace from camera for interact. */
   void DoLineTrace();
