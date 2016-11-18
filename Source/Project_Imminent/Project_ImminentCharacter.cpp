@@ -12,7 +12,8 @@
 #include "DrawDebugHelpers.h"
 #include "EngineUtils.h"
 #include "Engine.h"
-
+#include "Checkpoint.h"
+#include "Monster_Checkpoint.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogFPChar, Warning, All);
 
@@ -46,6 +47,10 @@ AProject_ImminentCharacter::AProject_ImminentCharacter()
   LanternMesh->SetupAttachment(GetCapsuleComponent());
   // LanternMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Overlap);
   LanternMesh->SetSimulatePhysics(true);
+
+  CollisionComponent = CreateDefaultSubobject<USphereComponent>(TEXT("CollisionComponent"));
+  CollisionComponent->SetupAttachment(GetCapsuleComponent());
+  CollisionComponent->OnComponentBeginOverlap.AddDynamic(this, &AProject_ImminentCharacter::OnOverlapBegin);
 
   NewLightColor.R = 230.0f;
   NewLightColor.G = 179.0f;
@@ -101,9 +106,13 @@ AProject_ImminentCharacter::AProject_ImminentCharacter()
   //RunSpeed = WalkSpeed * RunSpeedFactor;
   bExhausted = false;
 
-
+  CurrentCheckpoint = "none";
   // Uncomment the following line to turn motion controllers on by default:
   //bUsingMotionControllers = true;
+
+ /* static ConstructorHelpers::FObjectFinder<UClass> MonsterFinder(TEXT("Blueprint'/Game/ImminentCPP/Blueprints/AI/Monster_BP.Monster_BP_C'"));
+  Monster = MonsterFinder.Object;*/
+
 }
 
 void AProject_ImminentCharacter::BeginPlay()
@@ -129,7 +138,7 @@ void AProject_ImminentCharacter::SetupPlayerInputComponent(class UInputComponent
   PlayerInputComponent->BindAction("Interact", IE_Released, this, &AProject_ImminentCharacter::Release);
   PlayerInputComponent->BindAction("Run", IE_Pressed, this, &AProject_ImminentCharacter::Run);
   PlayerInputComponent->BindAction("Run", IE_Released, this, &AProject_ImminentCharacter::StopRun);
-  PlayerInputComponent->BindAction("ChargeLantern", IE_Pressed, this, &AProject_ImminentCharacter::RechargeLantern);
+  PlayerInputComponent->BindAction("ChargeLantern", IE_Pressed, this, &AProject_ImminentCharacter::RespawnAtCheckpoint);
   PlayerInputComponent->BindAction("ChargeLantern", IE_Released, this, &AProject_ImminentCharacter::StopRechargeLantern);
 
   PlayerInputComponent->BindAction("ResetVR", IE_Pressed, this, &AProject_ImminentCharacter::OnResetVR);
@@ -257,12 +266,56 @@ void AProject_ImminentCharacter::Tick(float DeltaTime)
   }
 }
 
-void AProject_ImminentCharacter::HandleDeath()
+
+void AProject_ImminentCharacter::OnOverlapBegin(class UPrimitiveComponent* OverlappingComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	if (Cast<ACheckpoint>(OtherActor))
+	{
+		ACheckpoint* cp = Cast<ACheckpoint>(OtherActor);
+		bool newCheckpoint = true;
+		for (int i = 0; i < CheckpointArray.Num(); i++)
+		{
+			if (cp->id == CheckpointArray[i])
+				newCheckpoint = false;
+		}
+		if (newCheckpoint)
+		{
+			
+			CurrentCheckpoint = cp->id;
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, CurrentCheckpoint);
+			CheckpointArray.Add(cp->id);
+		}		
+	}
+}
+
+void AProject_ImminentCharacter::RespawnAtCheckpoint()
 {
 	UWorld* World = GetWorld();
-	FString CurrentLevel = World->GetMapName();
-	FName levelName = FName(*CurrentLevel);
-	UGameplayStatics::OpenLevel(GetWorld(), levelName);
+	if (World)
+	{
+		for (TActorIterator<ACheckpoint> ActorItr(World); ActorItr; ++ActorItr)
+		{
+			if (ActorItr->id == CurrentCheckpoint)
+			{
+				FVector NewLocation = ActorItr->GetActorLocation();
+				SetActorLocation(NewLocation);
+					/*for (TActorIterator<AMonster_Checkpoint> MonsterItr(World); MonsterItr; ++MonsterItr)
+					{			
+						if (MonsterItr->id == CurrentCheckpoint)
+						{
+							FActorSpawnParameters SpawnParams;
+							SpawnParams.Owner = this;
+							SpawnParams.Instigator = Instigator;
+
+							if (World)
+								AMonster* m = World->SpawnActor<AMonster>(Monster, MonsterItr->GetActorLocation(), MonsterItr->GetActorRotation(), SpawnParams);			
+							break;
+						}
+					}*/
+					break;
+			}
+		}
+	}
 }
 
 void AProject_ImminentCharacter::DoLineTrace()

@@ -1,6 +1,7 @@
 // Copyright 1998-2016 Epic Games, Inc. All Rights Reserved.
 #pragma once
 #include "GameFramework/Character.h"
+#include "Monster.h"
 #include "Project_ImminentCharacter.generated.h"
 
 class UInputComponent;
@@ -57,6 +58,11 @@ class AProject_ImminentCharacter : public ACharacter
 
 	float Intensity;
 	TArray<USpotLightComponent*> SpotLightArray;
+	FString CurrentCheckpoint;
+
+	TArray<FString> CheckpointArray;
+
+
 
 public:
 	AProject_ImminentCharacter();
@@ -64,6 +70,9 @@ public:
 	virtual void BeginPlay();
 
 	virtual void Tick(float DeltaSeconds) override;
+
+	UPROPERTY(BlueprintReadWrite)
+		TSubclassOf<AMonster> Monster;
 
 	void RechargeLantern();
 	void StopRechargeLantern();
@@ -77,6 +86,12 @@ public:
 	FLinearColor NewLightColor;
 
 
+
+	UFUNCTION()
+	void OnOverlapBegin(class UPrimitiveComponent* OverlappingComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Collision)
+		USphereComponent* CollisionComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Light)
 		USpotLightComponent* ForwardSpotLight;
@@ -172,7 +187,7 @@ public:
 	bool bRunning;
 
 	UFUNCTION(BlueprintCallable, Category = "Death")
-	void HandleDeath();
+	void RespawnAtCheckpoint();
 
 protected:
   /** Line trace from camera for interact. */
