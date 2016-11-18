@@ -299,24 +299,30 @@ void AProject_ImminentCharacter::RespawnAtCheckpoint()
 			{
 				FVector NewLocation = ActorItr->GetActorLocation();
 				SetActorLocation(NewLocation);
-					/*for (TActorIterator<AMonster_Checkpoint> MonsterItr(World); MonsterItr; ++MonsterItr)
+					for (TActorIterator<AMonster_Checkpoint> CheckpointItr(World); CheckpointItr; ++CheckpointItr)
 					{			
-						if (MonsterItr->id == CurrentCheckpoint)
+						if (CheckpointItr->id == CurrentCheckpoint)
 						{
-							FActorSpawnParameters SpawnParams;
-							SpawnParams.Owner = this;
-							SpawnParams.Instigator = Instigator;
-
-							if (World)
-								AMonster* m = World->SpawnActor<AMonster>(Monster, MonsterItr->GetActorLocation(), MonsterItr->GetActorRotation(), SpawnParams);			
-							break;
+							for (TActorIterator<AMonster> MonsterItr(World); MonsterItr; ++MonsterItr)
+							{
+								FVector NewMonsterLocation = CheckpointItr->GetActorLocation();
+								MonsterItr->SetActorLocation(NewMonsterLocation);
+								break;
+							}						
 						}
-					}*/
+					}
 					break;
 			}
 		}
 	}
 }
+/*FActorSpawnParameters SpawnParams;
+SpawnParams.Owner = this;
+SpawnParams.Instigator = Instigator;
+
+if (World)
+AMonster* m = World->SpawnActor<AMonster>(Monster, MonsterItr->GetActorLocation(), MonsterItr->GetActorRotation(), SpawnParams);
+break;*/
 
 void AProject_ImminentCharacter::DoLineTrace()
 {
