@@ -110,8 +110,8 @@ AProject_ImminentCharacter::AProject_ImminentCharacter()
   // Uncomment the following line to turn motion controllers on by default:
   //bUsingMotionControllers = true;
 
-  static ConstructorHelpers::FObjectFinder<UClass> MonsterFinder(TEXT("Blueprint'/Game/ImminentCPP/Blueprints/AI/Monster_BP.Monster_BP_C'"));
-  Monster = MonsterFinder.Object;
+ /* static ConstructorHelpers::FObjectFinder<UClass> MonsterFinder(TEXT("Blueprint'/Game/ImminentCPP/Blueprints/AI/Monster_BP.Monster_BP_C'"));
+  Monster = MonsterFinder.Object;*/
 
 }
 
@@ -299,7 +299,7 @@ void AProject_ImminentCharacter::RespawnAtCheckpoint()
 			{
 				FVector NewLocation = ActorItr->GetActorLocation();
 				SetActorLocation(NewLocation);
-					for (TActorIterator<AMonster_Checkpoint> MonsterItr(World); MonsterItr; ++MonsterItr)
+					/*for (TActorIterator<AMonster_Checkpoint> MonsterItr(World); MonsterItr; ++MonsterItr)
 					{			
 						if (MonsterItr->id == CurrentCheckpoint)
 						{
@@ -311,7 +311,7 @@ void AProject_ImminentCharacter::RespawnAtCheckpoint()
 								AMonster* m = World->SpawnActor<AMonster>(Monster, MonsterItr->GetActorLocation(), MonsterItr->GetActorRotation(), SpawnParams);			
 							break;
 						}
-					}
+					}*/
 					break;
 			}
 		}
