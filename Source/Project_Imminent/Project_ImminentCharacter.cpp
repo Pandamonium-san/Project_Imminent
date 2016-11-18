@@ -138,8 +138,10 @@ void AProject_ImminentCharacter::SetupPlayerInputComponent(class UInputComponent
   PlayerInputComponent->BindAction("Interact", IE_Released, this, &AProject_ImminentCharacter::Release);
   PlayerInputComponent->BindAction("Run", IE_Pressed, this, &AProject_ImminentCharacter::Run);
   PlayerInputComponent->BindAction("Run", IE_Released, this, &AProject_ImminentCharacter::StopRun);
-  PlayerInputComponent->BindAction("ChargeLantern", IE_Pressed, this, &AProject_ImminentCharacter::RespawnAtCheckpoint);
+  PlayerInputComponent->BindAction("ChargeLantern", IE_Pressed, this, &AProject_ImminentCharacter::RechargeLantern);
   PlayerInputComponent->BindAction("ChargeLantern", IE_Released, this, &AProject_ImminentCharacter::StopRechargeLantern);
+  PlayerInputComponent->BindAction("Kill", IE_Pressed, this, &AProject_ImminentCharacter::RespawnAtCheckpoint);
+
 
   PlayerInputComponent->BindAction("ResetVR", IE_Pressed, this, &AProject_ImminentCharacter::OnResetVR);
 
@@ -299,24 +301,30 @@ void AProject_ImminentCharacter::RespawnAtCheckpoint()
 			{
 				FVector NewLocation = ActorItr->GetActorLocation();
 				SetActorLocation(NewLocation);
-					/*for (TActorIterator<AMonster_Checkpoint> MonsterItr(World); MonsterItr; ++MonsterItr)
+					for (TActorIterator<AMonster_Checkpoint> CheckpointItr(World); CheckpointItr; ++CheckpointItr)
 					{			
-						if (MonsterItr->id == CurrentCheckpoint)
+						if (CheckpointItr->id == CurrentCheckpoint)
 						{
-							FActorSpawnParameters SpawnParams;
-							SpawnParams.Owner = this;
-							SpawnParams.Instigator = Instigator;
-
-							if (World)
-								AMonster* m = World->SpawnActor<AMonster>(Monster, MonsterItr->GetActorLocation(), MonsterItr->GetActorRotation(), SpawnParams);			
-							break;
+							for (TActorIterator<AMonster> MonsterItr(World); MonsterItr; ++MonsterItr)
+							{
+								FVector NewMonsterLocation = CheckpointItr->GetActorLocation();
+								MonsterItr->SetActorLocation(NewMonsterLocation);
+								break;
+							}						
 						}
-					}*/
+					}
 					break;
 			}
 		}
 	}
 }
+/*FActorSpawnParameters SpawnParams;
+SpawnParams.Owner = this;
+SpawnParams.Instigator = Instigator;
+
+if (World)
+AMonster* m = World->SpawnActor<AMonster>(Monster, MonsterItr->GetActorLocation(), MonsterItr->GetActorRotation(), SpawnParams);
+break;*/
 
 void AProject_ImminentCharacter::DoLineTrace()
 {
