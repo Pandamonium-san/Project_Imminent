@@ -138,8 +138,10 @@ void AProject_ImminentCharacter::SetupPlayerInputComponent(class UInputComponent
   PlayerInputComponent->BindAction("Interact", IE_Released, this, &AProject_ImminentCharacter::Release);
   PlayerInputComponent->BindAction("Run", IE_Pressed, this, &AProject_ImminentCharacter::Run);
   PlayerInputComponent->BindAction("Run", IE_Released, this, &AProject_ImminentCharacter::StopRun);
-  PlayerInputComponent->BindAction("ChargeLantern", IE_Pressed, this, &AProject_ImminentCharacter::RespawnAtCheckpoint);
+  PlayerInputComponent->BindAction("ChargeLantern", IE_Pressed, this, &AProject_ImminentCharacter::RechargeLantern);
   PlayerInputComponent->BindAction("ChargeLantern", IE_Released, this, &AProject_ImminentCharacter::StopRechargeLantern);
+  PlayerInputComponent->BindAction("Kill", IE_Pressed, this, &AProject_ImminentCharacter::RespawnAtCheckpoint);
+
 
   PlayerInputComponent->BindAction("ResetVR", IE_Pressed, this, &AProject_ImminentCharacter::OnResetVR);
 
