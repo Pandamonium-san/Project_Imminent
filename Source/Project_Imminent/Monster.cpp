@@ -2,7 +2,7 @@
 
 #include "Project_Imminent.h"
 #include "Monster.h"
-
+#include "Project_ImminentCharacter.h"
 
 // Sets default values
 AMonster::AMonster()
@@ -10,11 +10,19 @@ AMonster::AMonster()
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	lightKillSphere = CreateDefaultSubobject<USphereComponent>(TEXT("LightsOutSphere"));
-	lightKillSphere->InitSphereRadius(400);
-	lightKillSphere->SetupAttachment(RootComponent);
-	lightKillSphere->bGenerateOverlapEvents = true;
-	lightKillSphere->OnComponentBeginOverlap.AddDynamic(this, &AMonster::OnOverlapBeginLight);
+	LightKillSphere = CreateDefaultSubobject<USphereComponent>(TEXT("LightsOutSphere"));
+	PlayerKillSphere = CreateDefaultSubobject<USphereComponent>(TEXT("PlayerKillSphere"));
+	PlayerKillSphere->SetupAttachment(GetCapsuleComponent());
+	PlayerKillSphere->InitSphereRadius(400);
+	PlayerKillSphere->bGenerateOverlapEvents = true;
+
+
+	LightKillSphere->InitSphereRadius(400);
+	LightKillSphere->SetupAttachment(GetCapsuleComponent());
+	LightKillSphere->bGenerateOverlapEvents = true;
+
+	LightKillSphere->OnComponentBeginOverlap.AddDynamic(this, &AMonster::OnOverlapBeginLight);
+
 
 	WalkSpeed = GetCharacterMovement()->MaxWalkSpeed;
 	FlySpeed = GetCharacterMovement()->MaxFlySpeed;
