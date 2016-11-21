@@ -18,13 +18,13 @@ public:
 	FString id;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Collision)
-		UBoxComponent* CheckPointHitBox;
+	UBoxComponent* CheckPointHitBox;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Collision)
+	USceneComponent* MonsterSpawn;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Position)
-		FVector CheckpointPosition;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Position)
-	FRotator CheckpointRotation;
+	USceneComponent* PlayerSpawn;
 
 	USceneComponent* RootComponent;
 

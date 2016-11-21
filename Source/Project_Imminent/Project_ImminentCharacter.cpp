@@ -13,7 +13,6 @@
 #include "EngineUtils.h"
 #include "Engine.h"
 #include "Checkpoint.h"
-#include "Monster_Checkpoint.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogFPChar, Warning, All);
 
@@ -299,21 +298,14 @@ void AProject_ImminentCharacter::RespawnAtCheckpoint()
 		{
 			if (ActorItr->id == CurrentCheckpoint)
 			{
-				FVector NewLocation = ActorItr->GetActorLocation();
-				SetActorLocation(NewLocation);
-					for (TActorIterator<AMonster_Checkpoint> CheckpointItr(World); CheckpointItr; ++CheckpointItr)
-					{			
-						if (CheckpointItr->id == CurrentCheckpoint)
-						{
-							for (TActorIterator<AMonster> MonsterItr(World); MonsterItr; ++MonsterItr)
-							{
-								FVector NewMonsterLocation = CheckpointItr->GetActorLocation();
-								MonsterItr->SetActorLocation(NewMonsterLocation);
-								break;
-							}						
-						}
-					}
+				FVector NewLocation = ActorItr->PlayerSpawn->GetComponentLocation();
+				FVector NewMonsterLocation = ActorItr->MonsterSpawn->GetComponentLocation();
+				SetActorLocation(NewLocation);		
+				for (TActorIterator<AMonster> MonsterItr(World); MonsterItr; ++MonsterItr)
+				{
+					MonsterItr->SetActorLocation(NewMonsterLocation);
 					break;
+				}										
 			}
 		}
 	}

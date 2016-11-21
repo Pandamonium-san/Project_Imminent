@@ -11,12 +11,13 @@ ACheckpoint::ACheckpoint()
 	PrimaryActorTick.bCanEverTick = true;
 
 	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
-
+	PlayerSpawn = CreateDefaultSubobject<USceneComponent>(TEXT("PlayerSpawn"));
+	MonsterSpawn = CreateDefaultSubobject<USceneComponent>(TEXT("MonsterSpawn"));
 	CheckPointHitBox = CreateDefaultSubobject<UBoxComponent>(TEXT("CollisionComponent"));
+	PlayerSpawn->SetupAttachment(RootComponent);
+	MonsterSpawn->SetupAttachment(RootComponent);
 	CheckPointHitBox->SetupAttachment(RootComponent);
 
-	CheckpointPosition = GetActorLocation();
-	CheckpointRotation = GetActorRotation();
 
 	id = "default";
 
