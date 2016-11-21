@@ -20,7 +20,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Collision)
 	UBoxComponent* CheckPointHitBox;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Collision)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Position)
 	USceneComponent* MonsterSpawn;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Position)
