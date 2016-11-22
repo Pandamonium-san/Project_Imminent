@@ -104,6 +104,7 @@ AProject_ImminentCharacter::AProject_ImminentCharacter()
   //WalkSpeed = GetCharacterMovement()->MaxWalkSpeed;
   //RunSpeed = WalkSpeed * RunSpeedFactor;
   bExhausted = false;
+  resetGuide = false;
 
   CurrentCheckpoint = "none";
   // Uncomment the following line to turn motion controllers on by default:
@@ -169,6 +170,12 @@ void AProject_ImminentCharacter::Tick(float DeltaTime)
       SpotLightArray[i]->SetIntensity(Intensity);
 
     LightSource->SetIntensity(Intensity);
+
+	if (LightSource->Intensity < 45 && !resetGuide) //Used the first time to tell the player to press R
+	{
+		resetGuide = true;
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Guide set to true"));
+	}
   }
 
   //Check if stamina should be consumed. 
