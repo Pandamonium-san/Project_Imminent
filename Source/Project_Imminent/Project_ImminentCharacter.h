@@ -189,6 +189,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Death")
 	void RespawnAtCheckpoint();
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Light)
+	bool resetGuide;
+
 protected:
   /** Line trace from camera for interact. */
   void DoLineTrace();
