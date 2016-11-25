@@ -306,8 +306,10 @@ void AProject_ImminentCharacter::RespawnAtCheckpoint()
 			if (ActorItr->id == CurrentCheckpoint)
 			{
 				FVector NewLocation = ActorItr->PlayerSpawn->GetComponentLocation();
+        FRotator NewRotation = ActorItr->PlayerSpawn->GetComponentRotation();
 				FVector NewMonsterLocation = ActorItr->MonsterSpawn->GetComponentLocation();
-				SetActorLocation(NewLocation);		
+        SetActorLocation(NewLocation, false, nullptr, ETeleportType::TeleportPhysics);
+        GetController()->SetControlRotation(NewRotation);
 				for (TActorIterator<AMonster> MonsterItr(World); MonsterItr; ++MonsterItr)
 				{
 					MonsterItr->SetActorLocation(NewMonsterLocation);
