@@ -13,6 +13,8 @@ void UBridgeTrigger::TriggerEvent_Implementation()
 		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
 		//ABridge *bridge = *ActorItr;
 		ActorItr->ActivateBridge();
+	
+		
 	}
 }
 
