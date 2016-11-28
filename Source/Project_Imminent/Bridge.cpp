@@ -36,7 +36,7 @@ void ABridge::BeginPlay()
 {
 	Super::BeginPlay();
 	delay = ResetDelay;
-	bActive = true;
+//	bActive = true;
 }
 
 // Called every frame
