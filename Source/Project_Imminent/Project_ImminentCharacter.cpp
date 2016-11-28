@@ -33,6 +33,7 @@ AProject_ImminentCharacter::AProject_ImminentCharacter()
   FirstPersonCameraComponent->SetupAttachment(GetCapsuleComponent());
   FirstPersonCameraComponent->RelativeLocation = FVector(50.0f, 1.75f, 64.f); // Position the camera
   FirstPersonCameraComponent->bUsePawnControlRotation = true;
+ 
 
   ArmMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ArmMesh"));
   ArmMesh->SetupAttachment(GetCapsuleComponent());
