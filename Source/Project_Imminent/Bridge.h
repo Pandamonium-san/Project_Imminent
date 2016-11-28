@@ -36,6 +36,9 @@ public:
 	bool bActive;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Rotation)
+	bool bIsResetting;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Rotation)
 	bool bShouldReset;
 
 	USceneComponent* RootComponent;

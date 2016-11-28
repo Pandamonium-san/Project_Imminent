@@ -26,6 +26,7 @@ ABridge::ABridge()
 	delay = ResetDelay;
 	bReset = false;
 	bActive = false;
+	bIsResetting = false;
 	bShouldReset = false;
 
 }
@@ -85,6 +86,7 @@ void ABridge::RotateBridge(float DeltaTime)
 void ABridge::ResetBridge(float DeltaTime)
 {
 	FRotator NewRotation = GetActorRotation();
+	bIsResetting = true;
 
 	if (counter >= 0)
 	{
@@ -104,6 +106,7 @@ void ABridge::ResetBridge(float DeltaTime)
 		bReset = false;
 		delay = ResetDelay;
 		bActive = false;
+		bIsResetting = false;
 	}
 
 }
