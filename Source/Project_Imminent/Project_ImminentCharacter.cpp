@@ -55,8 +55,8 @@ AProject_ImminentCharacter::AProject_ImminentCharacter()
   NewLightColor.G = 179.0f;
   NewLightColor.B = 111.0f;
 
-  MaxIntensity = 5000.0f;
-  IntensityConsumptionRate = 100.0f;
+  MaxIntensity = 500.0f;
+  IntensityConsumptionRate = 1.0f;
   Intensity = MaxIntensity;
 
   LightSource = CreateDefaultSubobject<UPointLightComponent>(TEXT("LightSource"));
