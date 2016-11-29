@@ -35,6 +35,9 @@ AProject_ImminentCharacter::AProject_ImminentCharacter()
   FirstPersonCameraComponent->bUsePawnControlRotation = true;
  
 
+  SkeletalMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("SkeletalMesh"));
+  SkeletalMesh->SetupAttachment(GetCapsuleComponent());
+
   ArmMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ArmMesh"));
   ArmMesh->SetupAttachment(GetCapsuleComponent());
   // ArmMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
@@ -106,6 +109,7 @@ AProject_ImminentCharacter::AProject_ImminentCharacter()
   //RunSpeed = WalkSpeed * RunSpeedFactor;
   bExhausted = false;
   resetGuide = false;
+  chargingLantern = false;
 
   CurrentCheckpoint = "none";
   // Uncomment the following line to turn motion controllers on by default:
@@ -353,7 +357,7 @@ void AProject_ImminentCharacter::OnResetVR()
 
 void AProject_ImminentCharacter::StopRechargeLantern()
 {
-
+	chargingLantern = false;
 }
 
 void AProject_ImminentCharacter::RechargeLantern()
@@ -361,6 +365,7 @@ void AProject_ImminentCharacter::RechargeLantern()
   GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Intensity reset"));
   Intensity = MaxIntensity;
   LightSource->SetIntensity(MaxIntensity);
+  chargingLantern = true;
 
   //for (int32 i = 0; i < SpotLightArray.Num()-1; i++)
   //	SpotLightArray[i]->SetIntensity(MaxIntensity);

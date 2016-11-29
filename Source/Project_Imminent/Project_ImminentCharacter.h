@@ -12,8 +12,8 @@ class AProject_ImminentCharacter : public ACharacter
 	GENERATED_BODY()
 
 	///** Pawn mesh: 1st person view (arms; seen only by self) */
-	//UPROPERTY(VisibleDefaultsOnly, Category=Mesh)
-	//class USkeletalMeshComponent* Mesh1P;
+	UPROPERTY(VisibleDefaultsOnly, Category=Mesh)
+	class USkeletalMeshComponent* SkeletalMesh;
 
 	/** First person camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Camera, meta = (AllowPrivateAccess = "true"))
@@ -191,6 +191,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Light)
 	bool resetGuide;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Light)
+	bool chargingLantern;
 
 protected:
   /** Line trace from camera for interact. */
