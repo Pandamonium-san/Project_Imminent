@@ -363,8 +363,8 @@ void AProject_ImminentCharacter::StopRechargeLantern()
 void AProject_ImminentCharacter::RechargeLantern()
 {
   GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Intensity reset"));
-  Intensity = MaxIntensity;
-  LightSource->SetIntensity(MaxIntensity);
+  //Intensity = MaxIntensity;
+  //LightSource->SetIntensity(MaxIntensity);
   chargingLantern = true;
 
   //for (int32 i = 0; i < SpotLightArray.Num()-1; i++)

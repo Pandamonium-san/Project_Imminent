@@ -56,7 +56,7 @@ class AProject_ImminentCharacter : public ACharacter
 	/* Is set to true if the player has exhausted all of the stamina and triggers a delay before running is available again */
 	bool bExhausted;
 
-	float Intensity;
+
 	TArray<USpotLightComponent*> SpotLightArray;
 	FString CurrentCheckpoint;
 
@@ -76,6 +76,9 @@ public:
 
 	void RechargeLantern();
 	void StopRechargeLantern();
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Light)
+	float Intensity;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Light)
 	float MaxIntensity;
