@@ -383,7 +383,7 @@ void AProject_ImminentCharacter::MoveForward(float Value)
   if (Value != 0.0f)
   {
     // add movement in that direction
-    if (GetCharacterMovement()->MovementMode == EMovementMode::MOVE_Walking)
+    if (GetCharacterMovement()->MovementMode == EMovementMode::MOVE_Walking || GetCharacterMovement()->MovementMode == EMovementMode::MOVE_Falling)
       AddMovementInput(GetActorForwardVector(), Value);
     else if (GetCharacterMovement()->MovementMode == (EMovementMode::MOVE_Flying | EMovementMode::MOVE_Swimming))
       AddMovementInput(FirstPersonCameraComponent->GetForwardVector(), Value);
@@ -395,7 +395,7 @@ void AProject_ImminentCharacter::MoveRight(float Value)
   if (Value != 0.0f)
   {
     // add movement in that direction
-    if(GetCharacterMovement()->MovementMode == EMovementMode::MOVE_Walking)
+    if(GetCharacterMovement()->MovementMode == EMovementMode::MOVE_Walking || GetCharacterMovement()->MovementMode == EMovementMode::MOVE_Falling)
         AddMovementInput(GetActorRightVector(), Value);
     else if (GetCharacterMovement()->MovementMode == (EMovementMode::MOVE_Flying | EMovementMode::MOVE_Swimming))
       AddMovementInput(FirstPersonCameraComponent->GetRightVector(), Value);
