@@ -11,10 +11,6 @@ class AProject_ImminentCharacter : public ACharacter
 {
 	GENERATED_BODY()
 
-	///** Pawn mesh: 1st person view (arms; seen only by self) */
-	//UPROPERTY(VisibleDefaultsOnly, Category=Mesh)
-	//class USkeletalMeshComponent* Mesh1P;
-
 	/** First person camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class UCameraComponent* FirstPersonCameraComponent;
@@ -56,7 +52,7 @@ class AProject_ImminentCharacter : public ACharacter
 	/* Is set to true if the player has exhausted all of the stamina and triggers a delay before running is available again */
 	bool bExhausted;
 
-	float Intensity;
+
 	TArray<USpotLightComponent*> SpotLightArray;
 	FString CurrentCheckpoint;
 
@@ -76,6 +72,9 @@ public:
 
 	void RechargeLantern();
 	void StopRechargeLantern();
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Light)
+	float Intensity;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Light)
 	float MaxIntensity;
@@ -153,6 +152,10 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Mesh, meta = (AllowPrivateAccess = "true"))
 	UStaticMeshComponent* HandleMesh;
 
+	///** Pawn mesh: 1st person view (arms; seen only by self) */
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Mesh, meta = (AllowPrivateAccess = "true"))
+	class USkeletalMeshComponent* SkeletalMesh;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Mesh, meta = (AllowPrivateAccess = "true"))
 	UStaticMeshComponent* ArmMesh;
 
@@ -191,6 +194,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Light)
 	bool resetGuide;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Light)
+	bool chargingLantern;
 
 protected:
   /** Line trace from camera for interact. */
