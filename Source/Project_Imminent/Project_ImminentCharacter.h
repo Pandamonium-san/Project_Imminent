@@ -186,7 +186,7 @@ public:
 	float StaminaRegenerationRate;
 
 	/* Is set to true if the player is running */
-	UPROPERTY(BlueprintReadOnly, Category = Movement)
+	UPROPERTY(BlueprintReadWrite, Category = Movement)
 	bool bRunning;
 
 	UFUNCTION(BlueprintCallable, Category = "Death")
