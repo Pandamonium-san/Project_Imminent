@@ -225,57 +225,6 @@ void AProject_ImminentCharacter::Tick(float DeltaTime)
     }
     if (distanceFromTarget > MaxHoldDistance)
       Release();
-
-    // Line Trace to prevent player from standing on held object
-    if (PhysicsHandle->GrabbedBoneName == NAME_None)
-    {
-
-      FCollisionQueryParams TraceParams = FCollisionQueryParams(FName(TEXT("Interact_Trace")), true, this);
-      TraceParams.bTraceComplex = true;
-      TraceParams.bTraceAsyncScene = true;
-      TraceParams.bReturnPhysicalMaterial = false;
-      TraceParams.AddIgnoredActor(this);
-
-      FHitResult Hit(ForceInit);
-
-      FVector Start = FirstPersonCameraComponent->GetComponentLocation();
-      FVector End = Start + FVector(0, 0, -InteractRange - 100);
-      GetWorld()->LineTraceSingleByChannel(
-        Hit,
-        Start,
-        End,
-        ECC_Visibility,
-        TraceParams
-      );
-      if (Hit.GetComponent() == PhysicsHandle->GrabbedComponent)
-        Release();
-      DrawDebugLine(GetWorld(), Start, End, FColor::Red, true, 0.1f, 0, 1);
-      Start = GetCapsuleComponent()->GetComponentLocation() + FVector(0, 0, -100.0f) - GetCapsuleComponent()->GetForwardVector() * 60;
-      End = Start + GetCapsuleComponent()->GetForwardVector() * 120;
-      GetWorld()->LineTraceSingleByChannel(
-        Hit,
-        Start,
-        End,
-        ECC_Visibility,
-        TraceParams
-      );
-      if (Hit.GetComponent() == PhysicsHandle->GrabbedComponent)
-        Release();
-      DrawDebugLine(GetWorld(), Start, End, FColor::Red, true, 0.1f, 0, 1);
-
-      Start = GetCapsuleComponent()->GetComponentLocation() + FVector(0, 0, -100.0f) - GetCapsuleComponent()->GetRightVector() * 60;
-      End = Start + GetCapsuleComponent()->GetRightVector() * 120;
-      GetWorld()->LineTraceSingleByChannel(
-        Hit,
-        Start,
-        End,
-        ECC_Visibility,
-        TraceParams
-      );
-      if (Hit.GetComponent() == PhysicsHandle->GrabbedComponent)
-        Release();
-      DrawDebugLine(GetWorld(), Start, End, FColor::Red, true, 0.1f, 0, 1);
-    }
   }
 }
 
@@ -446,7 +395,8 @@ void AProject_ImminentCharacter::Interact()
     PhysicsHandle->GrabComponent(HitResult.GetComponent(), HitResult.BoneName, HitResult.GetComponent()->GetComponentLocation(), false);
   else
     PhysicsHandle->GrabComponent(HitResult.GetComponent(), HitResult.BoneName, HitResult.Location + (HitResult.TraceEnd - HitResult.Location) / 2, false);
-  GrabbedItem = HitResult.GetComponent();
+  GrabbedComponent = HitResult.GetComponent();
+  GrabbedBoneName = HitResult.BoneName;
   pawnInitRot = FirstPersonCameraComponent->GetComponentRotation();
   itemInitRot = HitResult.Component->GetComponentRotation();
   itemInitAngDamp = HitResult.Component->GetAngularDamping();
@@ -471,7 +421,8 @@ void AProject_ImminentCharacter::Release()
     //PhysicsHandle->GrabbedComponent->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
     PhysicsHandle->GrabbedComponent->SetAngularDamping(itemInitAngDamp);
     PhysicsHandle->GrabbedComponent->WakeRigidBody();
-    GrabbedItem = NULL;
+    GrabbedComponent = NULL;
+    GrabbedBoneName = NAME_None;
     PhysicsHandle->ReleaseComponent();
 #ifdef UE_BUILD_DEBUG
     GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, "Release");
