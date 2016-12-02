@@ -26,6 +26,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Position)
 	USceneComponent* PlayerSpawn;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MonsterSpawn)
+	bool bMonsterShouldSpawn;
+
 	USceneComponent* RootComponent;
 
 	// Called when the game starts or when spawned

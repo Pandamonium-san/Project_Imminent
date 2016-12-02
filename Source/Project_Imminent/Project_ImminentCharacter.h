@@ -2,6 +2,7 @@
 #pragma once
 #include "GameFramework/Character.h"
 #include "Monster.h"
+#include "Checkpoint.h"
 #include "Project_ImminentCharacter.generated.h"
 
 class UInputComponent;
@@ -41,7 +42,10 @@ class AProject_ImminentCharacter : public ACharacter
     FRotator pawnInitRot;
   UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
     FRotator itemInitRot;
+
   float itemInitAngDamp;
+
+
   
 	/* WalkSpeed is derived from CharaterMovementComponent MaxWalkSpeed*/
 	float WalkSpeed;
@@ -60,7 +64,6 @@ class AProject_ImminentCharacter : public ACharacter
 	FString CurrentCheckpoint;
 
 	TArray<FString> CheckpointArray;
-
 
 
 public:
@@ -109,6 +112,9 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Light)
 		UPointLightComponent* LightSource;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Light)
+		ACheckpoint* CurrentCheckPoint;
 
 
 

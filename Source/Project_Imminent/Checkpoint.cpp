@@ -17,7 +17,7 @@ ACheckpoint::ACheckpoint()
 	PlayerSpawn->SetupAttachment(RootComponent);
 	MonsterSpawn->SetupAttachment(RootComponent);
 	CheckPointHitBox->SetupAttachment(RootComponent);
-
+	bMonsterShouldSpawn = true;
 
 	id = "default";
 
