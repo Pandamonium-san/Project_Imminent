@@ -27,7 +27,10 @@ class AProject_ImminentCharacter : public ACharacter
   class UPhysicsHandleComponent* PhysicsHandle;
 
   UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-  class UPrimitiveComponent* GrabbedItem;
+  class UPrimitiveComponent* GrabbedComponent;
+
+  UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+    FName GrabbedBoneName;
 
   UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
   /** Hit result for line trace. Shows what the player is looking at. */
