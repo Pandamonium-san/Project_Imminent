@@ -162,6 +162,8 @@ void AProject_ImminentCharacter::SetupPlayerInputComponent(class UInputComponent
   PlayerInputComponent->BindAxis("LookUpRate", this, &AProject_ImminentCharacter::LookUpAtRate);
 
   PlayerInputComponent->BindAxis("MoveItemAway", this, &AProject_ImminentCharacter::MoveItemAway);
+
+  CurrentCheckpoint = NULL;
 }
 
 void AProject_ImminentCharacter::Tick(float DeltaTime)
@@ -234,7 +236,10 @@ void AProject_ImminentCharacter::OnOverlapBegin(class UPrimitiveComponent* Overl
 	if (Cast<ACheckpoint>(OtherActor))
 	{
 		ACheckpoint* cp = Cast<ACheckpoint>(OtherActor);
-		bool newCheckpoint = true;
+
+		CurrentCheckPoint = cp;
+
+		/*bool newCheckpoint = true;
 		for (int i = 0; i < CheckpointArray.Num(); i++)
 		{
 			if (cp->id == CheckpointArray[i])
@@ -246,13 +251,37 @@ void AProject_ImminentCharacter::OnOverlapBegin(class UPrimitiveComponent* Overl
 			CurrentCheckpoint = cp->id;
 			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, CurrentCheckpoint);
 			CheckpointArray.Add(cp->id);
-		}		
+		}		*/
 	}
 }
 
 void AProject_ImminentCharacter::RespawnAtCheckpoint()
 {
-	UWorld* World = GetWorld();
+	if (CurrentCheckPoint != NULL)
+	{
+		UWorld* World = GetWorld();
+		FVector PlayerCheckpoint = CurrentCheckPoint->PlayerSpawn->GetComponentLocation();
+		FRotator PlayerCheckpointRotation = CurrentCheckPoint->PlayerSpawn->GetComponentRotation();
+
+
+		SetActorLocation(PlayerCheckpoint, false, nullptr, ETeleportType::TeleportPhysics);
+		GetController()->SetControlRotation(PlayerCheckpointRotation);
+
+		if (CurrentCheckPoint->bMonsterShouldSpawn)
+		{
+			FVector MonsterCheckpoint = CurrentCheckPoint->MonsterSpawn->GetComponentLocation();
+
+			for (TActorIterator<AMonster> MonsterItr(World); MonsterItr; ++MonsterItr)
+			{
+				MonsterItr->SetActorLocation(MonsterCheckpoint);
+				break;
+			}
+		}
+
+	
+	}
+	
+	/*UWorld* World = GetWorld();
 	if (World)
 	{
 		for (TActorIterator<ACheckpoint> ActorItr(World); ActorItr; ++ActorItr)
@@ -271,7 +300,7 @@ void AProject_ImminentCharacter::RespawnAtCheckpoint()
 				}										
 			}
 		}
-	}
+	}*/
 }
 /*FActorSpawnParameters SpawnParams;
 SpawnParams.Owner = this;
