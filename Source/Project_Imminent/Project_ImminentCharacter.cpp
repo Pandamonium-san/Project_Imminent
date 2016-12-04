@@ -36,18 +36,14 @@ AProject_ImminentCharacter::AProject_ImminentCharacter()
  
 
   SkeletalMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("SkeletalMesh"));
-  SkeletalMesh->SetupAttachment(GetCapsuleComponent());
-
-  ArmMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ArmMesh"));
-  ArmMesh->SetupAttachment(GetCapsuleComponent());
-  // ArmMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+  SkeletalMesh->SetupAttachment(FirstPersonCameraComponent);
 
   HandleMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("HandleMesh"));
-  HandleMesh->SetupAttachment(GetCapsuleComponent());
+  HandleMesh->SetupAttachment(FirstPersonCameraComponent);
   //HandleMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 
   LanternMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("LanternMesh"));
-  LanternMesh->SetupAttachment(GetCapsuleComponent());
+  LanternMesh->SetupAttachment(FirstPersonCameraComponent);
   // LanternMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Overlap);
   LanternMesh->SetSimulatePhysics(true);
 
