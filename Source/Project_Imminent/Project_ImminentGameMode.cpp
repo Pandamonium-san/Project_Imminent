@@ -9,7 +9,7 @@ AProject_ImminentGameMode::AProject_ImminentGameMode()
 	: Super()
 {
 	// set default pawn class to our Blueprinted character
-	static ConstructorHelpers::FClassFinder<APawn> PlayerPawnClassFinder(TEXT("/Game/ImminentCPP/Blueprints/Project_ImminentCharacter_BP"));
+	static ConstructorHelpers::FClassFinder<APawn> PlayerPawnClassFinder(TEXT("/Game/ImminentCPP/Blueprints/Project_ImminentCharacter_BP_TEMPFIX"));
 	DefaultPawnClass = PlayerPawnClassFinder.Class;
 
 	// use our custom HUD class
