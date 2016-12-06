@@ -33,7 +33,7 @@ AProject_ImminentCharacter::AProject_ImminentCharacter()
   FirstPersonCameraComponent->SetupAttachment(GetCapsuleComponent());
   FirstPersonCameraComponent->RelativeLocation = FVector(50.0f, 1.75f, 64.f); // Position the camera
   FirstPersonCameraComponent->bUsePawnControlRotation = true;
- 
+
 
   SkeletalMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("SkeletalMesh"));
   SkeletalMesh->SetupAttachment(FirstPersonCameraComponent);
@@ -166,7 +166,7 @@ void AProject_ImminentCharacter::Tick(float DeltaTime)
 {
   Super::Tick(DeltaTime);
 
-  if (LightSource->Intensity >= 1.0f)
+  if (Intensity >= 0.0f)
   {
     Intensity -= IntensityConsumptionRate * DeltaTime;
     for (int32 i = 0; i < SpotLightArray.Num(); i++)
@@ -174,11 +174,11 @@ void AProject_ImminentCharacter::Tick(float DeltaTime)
 
     LightSource->SetIntensity(Intensity);
 
-	if (LightSource->Intensity < 45 && !resetGuide) //Used the first time to tell the player to press R
-	{
-		resetGuide = true;
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Guide set to true"));
-	}
+    if (Intensity < 0.4f * MaxIntensity && !resetGuide) //Used the first time to tell the player to press R
+    {
+      resetGuide = true;
+      GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Guide set to true"));
+    }
   }
 
   //Check if stamina should be consumed. 
@@ -229,74 +229,74 @@ void AProject_ImminentCharacter::Tick(float DeltaTime)
 
 void AProject_ImminentCharacter::OnOverlapBegin(class UPrimitiveComponent* OverlappingComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if (Cast<ACheckpoint>(OtherActor))
-	{
-		ACheckpoint* cp = Cast<ACheckpoint>(OtherActor);
+  if (Cast<ACheckpoint>(OtherActor))
+  {
+    ACheckpoint* cp = Cast<ACheckpoint>(OtherActor);
 
-		CurrentCheckPoint = cp;
+    CurrentCheckPoint = cp;
 
-		/*bool newCheckpoint = true;
-		for (int i = 0; i < CheckpointArray.Num(); i++)
-		{
-			if (cp->id == CheckpointArray[i])
-				newCheckpoint = false;
-		}
-		if (newCheckpoint)
-		{
-			
-			CurrentCheckpoint = cp->id;
-			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, CurrentCheckpoint);
-			CheckpointArray.Add(cp->id);
-		}		*/
-	}
+    /*bool newCheckpoint = true;
+    for (int i = 0; i < CheckpointArray.Num(); i++)
+    {
+      if (cp->id == CheckpointArray[i])
+        newCheckpoint = false;
+    }
+    if (newCheckpoint)
+    {
+
+      CurrentCheckpoint = cp->id;
+      GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, CurrentCheckpoint);
+      CheckpointArray.Add(cp->id);
+    }		*/
+  }
 }
 
 void AProject_ImminentCharacter::RespawnAtCheckpoint()
 {
-	if (CurrentCheckPoint != NULL)
-	{
-		UWorld* World = GetWorld();
-		FVector PlayerCheckpoint = CurrentCheckPoint->PlayerSpawn->GetComponentLocation();
-		FRotator PlayerCheckpointRotation = CurrentCheckPoint->PlayerSpawn->GetComponentRotation();
+  if (CurrentCheckPoint != NULL)
+  {
+    UWorld* World = GetWorld();
+    FVector PlayerCheckpoint = CurrentCheckPoint->PlayerSpawn->GetComponentLocation();
+    FRotator PlayerCheckpointRotation = CurrentCheckPoint->PlayerSpawn->GetComponentRotation();
 
 
-		SetActorLocation(PlayerCheckpoint, false, nullptr, ETeleportType::TeleportPhysics);
-		GetController()->SetControlRotation(PlayerCheckpointRotation);
+    SetActorLocation(PlayerCheckpoint, false, nullptr, ETeleportType::TeleportPhysics);
+    GetController()->SetControlRotation(PlayerCheckpointRotation);
 
-		if (CurrentCheckPoint->bMonsterShouldSpawn)
-		{
-			FVector MonsterCheckpoint = CurrentCheckPoint->MonsterSpawn->GetComponentLocation();
+    if (CurrentCheckPoint->bMonsterShouldSpawn)
+    {
+      FVector MonsterCheckpoint = CurrentCheckPoint->MonsterSpawn->GetComponentLocation();
 
-			for (TActorIterator<AMonster> MonsterItr(World); MonsterItr; ++MonsterItr)
-			{
-				MonsterItr->SetActorLocation(MonsterCheckpoint);
-				break;
-			}
-		}
+      for (TActorIterator<AMonster> MonsterItr(World); MonsterItr; ++MonsterItr)
+      {
+        MonsterItr->SetActorLocation(MonsterCheckpoint);
+        break;
+      }
+    }
 
-	
-	}
-	
-	/*UWorld* World = GetWorld();
-	if (World)
-	{
-		for (TActorIterator<ACheckpoint> ActorItr(World); ActorItr; ++ActorItr)
-		{
-			if (ActorItr->id == CurrentCheckpoint)
-			{
-				FVector NewLocation = ActorItr->PlayerSpawn->GetComponentLocation();
+
+  }
+
+  /*UWorld* World = GetWorld();
+  if (World)
+  {
+    for (TActorIterator<ACheckpoint> ActorItr(World); ActorItr; ++ActorItr)
+    {
+      if (ActorItr->id == CurrentCheckpoint)
+      {
+        FVector NewLocation = ActorItr->PlayerSpawn->GetComponentLocation();
         FRotator NewRotation = ActorItr->PlayerSpawn->GetComponentRotation();
-				FVector NewMonsterLocation = ActorItr->MonsterSpawn->GetComponentLocation();
+        FVector NewMonsterLocation = ActorItr->MonsterSpawn->GetComponentLocation();
         SetActorLocation(NewLocation, false, nullptr, ETeleportType::TeleportPhysics);
         GetController()->SetControlRotation(NewRotation);
-				for (TActorIterator<AMonster> MonsterItr(World); MonsterItr; ++MonsterItr)
-				{
-					MonsterItr->SetActorLocation(NewMonsterLocation);
-					break;
-				}										
-			}
-		}
-	}*/
+        for (TActorIterator<AMonster> MonsterItr(World); MonsterItr; ++MonsterItr)
+        {
+          MonsterItr->SetActorLocation(NewMonsterLocation);
+          break;
+        }
+      }
+    }
+  }*/
 }
 /*FActorSpawnParameters SpawnParams;
 SpawnParams.Owner = this;
@@ -331,7 +331,7 @@ void AProject_ImminentCharacter::OnResetVR()
 
 void AProject_ImminentCharacter::StopRechargeLantern()
 {
-	chargingLantern = false;
+  chargingLantern = false;
 }
 
 void AProject_ImminentCharacter::RechargeLantern()
@@ -369,8 +369,8 @@ void AProject_ImminentCharacter::MoveRight(float Value)
   if (Value != 0.0f)
   {
     // add movement in that direction
-    if(GetCharacterMovement()->MovementMode == EMovementMode::MOVE_Walking || GetCharacterMovement()->MovementMode == EMovementMode::MOVE_Falling)
-        AddMovementInput(GetActorRightVector(), Value);
+    if (GetCharacterMovement()->MovementMode == EMovementMode::MOVE_Walking || GetCharacterMovement()->MovementMode == EMovementMode::MOVE_Falling)
+      AddMovementInput(GetActorRightVector(), Value);
     else if (GetCharacterMovement()->MovementMode == (EMovementMode::MOVE_Flying | EMovementMode::MOVE_Swimming))
       AddMovementInput(FirstPersonCameraComponent->GetRightVector(), Value);
   }
