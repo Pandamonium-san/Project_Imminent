@@ -2,8 +2,6 @@
 
 #include "Project_Imminent.h"
 #include "KeyTrigger.h"
-#include "UnrealEd.h"
-#include "EngineUtils.h"
 #include "SwingDoor.h"
 #include "KeyObject.h"
 
