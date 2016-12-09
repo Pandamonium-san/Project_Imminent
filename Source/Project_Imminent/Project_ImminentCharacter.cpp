@@ -470,3 +470,8 @@ void AProject_ImminentCharacter::StopRun()
   bRunning = false;
   GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
 }
+
+void AProject_ImminentCharacter::FellOutOfWorld(const class UDamageType& dmgType)
+{
+  RespawnAtCheckpoint();
+}
