@@ -201,6 +201,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Death")
 	void RespawnAtCheckpoint();
 
+  virtual void FellOutOfWorld(const class UDamageType& dmgType);
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Light)
 	bool resetGuide;
 
