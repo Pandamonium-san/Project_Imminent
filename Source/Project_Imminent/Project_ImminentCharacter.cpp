@@ -51,40 +51,12 @@ AProject_ImminentCharacter::AProject_ImminentCharacter()
   CollisionComponent->SetupAttachment(GetCapsuleComponent());
   CollisionComponent->OnComponentBeginOverlap.AddDynamic(this, &AProject_ImminentCharacter::OnOverlapBegin);
 
-  NewLightColor.R = 230.0f;
-  NewLightColor.G = 179.0f;
-  NewLightColor.B = 111.0f;
-
   MaxIntensity = 500.0f;
   IntensityConsumptionRate = 1.0f;
   Intensity = MaxIntensity;
 
   LightSource = CreateDefaultSubobject<UPointLightComponent>(TEXT("LightSource"));
   LightSource->AttachToComponent(LanternMesh, FAttachmentTransformRules::KeepRelativeTransform);
-  LightSource->SetLightColor(NewLightColor);
-
-  ForwardSpotLight = CreateDefaultSubobject<USpotLightComponent>(TEXT("ForwardSpotLight"));
-  ForwardSpotLight->AttachToComponent(LightSource, FAttachmentTransformRules::KeepRelativeTransform);
-  ForwardSpotLight->SetLightColor(NewLightColor);
-  SpotLightArray.Add(ForwardSpotLight);
-  /*
-    LeftSpotLight = CreateDefaultSubobject<USpotLightComponent>(TEXT("LeftSpotLight"));
-    LeftSpotLight->SetRelativeRotation(FRotator(0.0f, -90.0f, 0.0f));
-    LeftSpotLight->SetLightColor(NewLightColor);
-    LeftSpotLight->AttachToComponent(LightSource, FAttachmentTransformRules::KeepRelativeTransform);
-    SpotLightArray.Add(LeftSpotLight);*/
-
-  RightSpotLight = CreateDefaultSubobject<USpotLightComponent>(TEXT("RightSpotLight"));
-  RightSpotLight->SetRelativeRotation(FRotator(0.0f, 90.0f, 0.0f));
-  RightSpotLight->SetLightColor(NewLightColor);
-  RightSpotLight->AttachToComponent(LightSource, FAttachmentTransformRules::KeepRelativeTransform);
-  SpotLightArray.Add(RightSpotLight);
-
-  BackSpotLight = CreateDefaultSubobject<USpotLightComponent>(TEXT("BackSpotLight"));
-  BackSpotLight->SetRelativeRotation(FRotator(0.0f, 180.0f, 0.0f));
-  BackSpotLight->SetLightColor(NewLightColor);
-  BackSpotLight->AttachToComponent(LightSource, FAttachmentTransformRules::KeepRelativeTransform);
-  SpotLightArray.Add(BackSpotLight);
 
   // Create VR Controllers.
   R_MotionController = CreateDefaultSubobject<UMotionControllerComponent>(TEXT("R_MotionController"));
@@ -106,8 +78,9 @@ AProject_ImminentCharacter::AProject_ImminentCharacter()
   bExhausted = false;
   resetGuide = false;
   chargingLantern = false;
-
   CurrentCheckpoint = "none";
+  RechargeWalkSpeed = 150.0f;
+
   // Uncomment the following line to turn motion controllers on by default:
   //bUsingMotionControllers = true;
 
@@ -122,6 +95,8 @@ void AProject_ImminentCharacter::BeginPlay()
   Super::BeginPlay();
   WalkSpeed = GetCharacterMovement()->MaxWalkSpeed;
   RunSpeed = WalkSpeed * RunSpeedFactor;
+
+
 }
 
 
@@ -169,9 +144,6 @@ void AProject_ImminentCharacter::Tick(float DeltaTime)
   if (Intensity >= 0.0f)
   {
     Intensity -= IntensityConsumptionRate * DeltaTime;
-    for (int32 i = 0; i < SpotLightArray.Num(); i++)
-      SpotLightArray[i]->SetIntensity(Intensity);
-
     LightSource->SetIntensity(Intensity);
 
     if (Intensity < 0.4f * MaxIntensity && !resetGuide) //Used the first time to tell the player to press R
@@ -186,14 +158,13 @@ void AProject_ImminentCharacter::Tick(float DeltaTime)
     Stamina -= StaminaConsumptionRate * DeltaTime;
   //Checks if stamina should be regenerated. 
   if (!bRunning && Stamina < MaxStamina)
-    Stamina += StaminaRegenerationRate * DeltaTime;
+    Stamina += StaminaRegenerationRate * DeltaTime;	  
 
   //Checks if stamina has been exhausted and stops the player from running
   if (Stamina <= 1.0f)
   {
     bExhausted = true;
     StopRun();
-    GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Exhausted!"));
   }
 
   //Checks if stamina has been recovered to the exhaustion limit and if so removes exhaustion.
@@ -234,20 +205,6 @@ void AProject_ImminentCharacter::OnOverlapBegin(class UPrimitiveComponent* Overl
     ACheckpoint* cp = Cast<ACheckpoint>(OtherActor);
 
     CurrentCheckPoint = cp;
-
-    /*bool newCheckpoint = true;
-    for (int i = 0; i < CheckpointArray.Num(); i++)
-    {
-      if (cp->id == CheckpointArray[i])
-        newCheckpoint = false;
-    }
-    if (newCheckpoint)
-    {
-
-      CurrentCheckpoint = cp->id;
-      GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, CurrentCheckpoint);
-      CheckpointArray.Add(cp->id);
-    }		*/
   }
 }
 
@@ -273,38 +230,10 @@ void AProject_ImminentCharacter::RespawnAtCheckpoint()
         break;
       }
     }
-
-
   }
 
-  /*UWorld* World = GetWorld();
-  if (World)
-  {
-    for (TActorIterator<ACheckpoint> ActorItr(World); ActorItr; ++ActorItr)
-    {
-      if (ActorItr->id == CurrentCheckpoint)
-      {
-        FVector NewLocation = ActorItr->PlayerSpawn->GetComponentLocation();
-        FRotator NewRotation = ActorItr->PlayerSpawn->GetComponentRotation();
-        FVector NewMonsterLocation = ActorItr->MonsterSpawn->GetComponentLocation();
-        SetActorLocation(NewLocation, false, nullptr, ETeleportType::TeleportPhysics);
-        GetController()->SetControlRotation(NewRotation);
-        for (TActorIterator<AMonster> MonsterItr(World); MonsterItr; ++MonsterItr)
-        {
-          MonsterItr->SetActorLocation(NewMonsterLocation);
-          break;
-        }
-      }
-    }
-  }*/
 }
-/*FActorSpawnParameters SpawnParams;
-SpawnParams.Owner = this;
-SpawnParams.Instigator = Instigator;
 
-if (World)
-AMonster* m = World->SpawnActor<AMonster>(Monster, MonsterItr->GetActorLocation(), MonsterItr->GetActorRotation(), SpawnParams);
-break;*/
 
 void AProject_ImminentCharacter::DoLineTrace()
 {
@@ -332,14 +261,19 @@ void AProject_ImminentCharacter::OnResetVR()
 void AProject_ImminentCharacter::StopRechargeLantern()
 {
   chargingLantern = false;
+  GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
+
+  //GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
+
 }
 
 void AProject_ImminentCharacter::RechargeLantern()
 {
-  GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Intensity reset"));
   //Intensity = MaxIntensity;
   //LightSource->SetIntensity(MaxIntensity);
-  chargingLantern = true;
+	GetCharacterMovement()->MaxWalkSpeed = RechargeWalkSpeed;
+	 chargingLantern = true;
+	 bRunning = false;
 
   //for (int32 i = 0; i < SpotLightArray.Num()-1; i++)
   //	SpotLightArray[i]->SetIntensity(MaxIntensity);
@@ -351,6 +285,8 @@ void AProject_ImminentCharacter::RechargeLantern()
   //	break;
   //}
 }
+
+
 
 void AProject_ImminentCharacter::MoveForward(float Value)
 {
@@ -458,7 +394,7 @@ void AProject_ImminentCharacter::Release()
 void AProject_ImminentCharacter::Run()
 {
   //Checks if the player can run: Have stamina and is not exhausted, if so sets the walkspeed to runspeed.
-  if (Stamina > 0 && !bExhausted)
+	if (Stamina > 0 && !bExhausted && !chargingLantern)
   {
     GetCharacterMovement()->MaxWalkSpeed = RunSpeed;
     bRunning = true;
@@ -467,8 +403,11 @@ void AProject_ImminentCharacter::Run()
 void AProject_ImminentCharacter::StopRun()
 {
   //Stops the character from runnin and returns the walkspeed to default.
-  bRunning = false;
-  GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
+	if (!chargingLantern)
+	{
+		bRunning = false;
+		GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
+	}
 }
 
 void AProject_ImminentCharacter::FellOutOfWorld(const class UDamageType& dmgType)

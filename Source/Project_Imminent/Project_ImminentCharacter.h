@@ -59,8 +59,8 @@ class AProject_ImminentCharacter : public ACharacter
 	/* Is set to true if the player has exhausted all of the stamina and triggers a delay before running is available again */
 	bool bExhausted;
 
+	float CurrentWalkSpeed;
 
-	TArray<USpotLightComponent*> SpotLightArray;
 	FString CurrentCheckpoint;
 
 	TArray<FString> CheckpointArray;
@@ -88,9 +88,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Light)
 	float IntensityConsumptionRate;
 
-	FLinearColor NewLightColor;
-
-
 
 	UFUNCTION()
 	void OnOverlapBegin(class UPrimitiveComponent* OverlappingComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
@@ -99,24 +96,13 @@ public:
 		USphereComponent* CollisionComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Light)
-		USpotLightComponent* ForwardSpotLight;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Light)
-		USpotLightComponent* RightSpotLight;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Light)
-		USpotLightComponent* LeftSpotLight;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Light)
-		USpotLightComponent* BackSpotLight;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Light)
 		UPointLightComponent* LightSource;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Light)
 		ACheckpoint* CurrentCheckPoint;
 
-
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Movement)
+	float RechargeWalkSpeed;
 
 
 	/** Base turn rate, in deg/sec. Other scaling may affect final turn rate. */
@@ -211,7 +197,7 @@ public:
 
 protected:
   /** Line trace from camera for interact. */
-  void DoLineTrace();
+	void DoLineTrace();
 
 	/** Resets HMD orientation and position in VR. */
 	void OnResetVR();
