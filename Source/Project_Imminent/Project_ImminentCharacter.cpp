@@ -337,12 +337,12 @@ void AProject_ImminentCharacter::Interact()
   if (HitResult.Component->GetMass() > MaxGrabMass)
   {
 #ifdef UE_BUILD_DEBUG
-    GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, "Too heavy");
+    //GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, "Too heavy");
 #endif
     return;
   }
 #ifdef UE_BUILD_DEBUG
-  GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, "Grab");
+  //GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, "Grab");
 #endif
   PhysicsHandle->InterpolationSpeed = InterpolationSpeed;
   if (HitResult.BoneName == NAME_None)
@@ -379,7 +379,7 @@ void AProject_ImminentCharacter::Release()
     GrabbedBoneName = NAME_None;
     PhysicsHandle->ReleaseComponent();
 #ifdef UE_BUILD_DEBUG
-    GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, "Release");
+    //GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, "Release");
 #endif
   }
 }
