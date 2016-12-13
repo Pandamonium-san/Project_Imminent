@@ -189,8 +189,6 @@ public:
 
   virtual void FellOutOfWorld(const class UDamageType& dmgType);
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Light)
-	bool resetGuide;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Light)
 	bool chargingLantern;

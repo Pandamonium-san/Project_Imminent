@@ -76,7 +76,6 @@ AProject_ImminentCharacter::AProject_ImminentCharacter()
   //WalkSpeed = GetCharacterMovement()->MaxWalkSpeed;
   //RunSpeed = WalkSpeed * RunSpeedFactor;
   bExhausted = false;
-  resetGuide = false;
   chargingLantern = false;
   CurrentCheckpoint = "none";
   RechargeWalkSpeed = 150.0f;
@@ -145,12 +144,6 @@ void AProject_ImminentCharacter::Tick(float DeltaTime)
   {
     Intensity -= IntensityConsumptionRate * DeltaTime;
     LightSource->SetIntensity(Intensity);
-
-    if (Intensity < 0.4f * MaxIntensity && !resetGuide) //Used the first time to tell the player to press R
-    {
-      resetGuide = true;
-      GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Guide set to true"));
-    }
   }
 
   //Check if stamina should be consumed. 
