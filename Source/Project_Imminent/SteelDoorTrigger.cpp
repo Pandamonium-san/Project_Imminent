@@ -21,6 +21,7 @@ void USteelDoorTrigger::TriggerEvent_Implementation()
 		ActorItr->PointLight->SetVisibility(true);
 		break;
 	}
+	Activate();
 
 #ifdef UE_BUILD_DEBUG
 	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Red, "SteelDoorTrigger activated.");
