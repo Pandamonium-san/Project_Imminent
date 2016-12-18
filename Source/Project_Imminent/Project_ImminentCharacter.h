@@ -65,6 +65,12 @@ class AProject_ImminentCharacter : public ACharacter
 
 	TArray<FString> CheckpointArray;
 
+	bool bBreathing;
+
+	UAudioComponent* BreathingAudioComponent;
+
+
+
 
 public:
 	AProject_ImminentCharacter();
@@ -74,7 +80,10 @@ public:
 	virtual void Tick(float DeltaSeconds) override;
 
 	UPROPERTY(BlueprintReadWrite)
-		TSubclassOf<AMonster> Monster;
+	TSubclassOf<AMonster> Monster;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Audio)
+	USoundCue* BreathingSoundCue;
 
 	void RechargeLantern();
 	void StopRechargeLantern();

@@ -66,7 +66,7 @@ AProject_ImminentCharacter::AProject_ImminentCharacter()
   L_MotionController->SetupAttachment(RootComponent);
 
   PhysicsHandle = CreateDefaultSubobject<UPhysicsHandleComponent>(TEXT("GrabHandle"));
-
+  bBreathing = false;
   RunSpeedFactor = 1.5f;
   MaxStamina = 50.0f;
   StaminaConsumptionRate = 10.0f;
@@ -83,9 +83,14 @@ AProject_ImminentCharacter::AProject_ImminentCharacter()
   // Uncomment the following line to turn motion controllers on by default:
   //bUsingMotionControllers = true;
 
- /* static ConstructorHelpers::FObjectFinder<UClass> MonsterFinder(TEXT("Blueprint'/Game/ImminentCPP/Blueprints/AI/Monster_BP.Monster_BP_C'"));
-  Monster = MonsterFinder.Object;*/
 
+
+BreathingAudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("BreathingAudioComp"));
+BreathingAudioComponent->bAutoActivate = false;
+BreathingAudioComponent->SetupAttachment(RootComponent);
+
+
+  
 }
 
 void AProject_ImminentCharacter::BeginPlay()
@@ -94,6 +99,8 @@ void AProject_ImminentCharacter::BeginPlay()
   Super::BeginPlay();
   WalkSpeed = GetCharacterMovement()->MaxWalkSpeed;
   RunSpeed = WalkSpeed * RunSpeedFactor;
+  BreathingAudioComponent->SetSound(BreathingSoundCue);
+ 
 
 
 }
@@ -157,14 +164,18 @@ void AProject_ImminentCharacter::Tick(float DeltaTime)
   if (Stamina <= 1.0f)
   {
     bExhausted = true;
+	bBreathing = true;
     StopRun();
   }
 
   //Checks if stamina has been recovered to the exhaustion limit and if so removes exhaustion.
   if (bExhausted)
   {
-    if (Stamina >= ExhaustionLimit)
-      bExhausted = false;
+	  if (Stamina >= ExhaustionLimit)
+	  {
+		  BreathingAudioComponent->Stop();
+		  bExhausted = false;
+	  }			
   }
 
   DoLineTrace();
@@ -401,6 +412,12 @@ void AProject_ImminentCharacter::StopRun()
 		bRunning = false;
 		GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
 	}
+	if (bBreathing)
+	{
+		BreathingAudioComponent->Play();
+		bBreathing = false;
+	}
+
 }
 
 void AProject_ImminentCharacter::FellOutOfWorld(const class UDamageType& dmgType)
